@@ -1,5 +1,5 @@
 use std::ops::Index;
-use bevy::prelude::{Component, Resource};
+use bevy::prelude::Component;
 use rand::prelude::StdRng;
 use rand::{Rng, SeedableRng};
 use crate::world::block::{Block, BlockType};
