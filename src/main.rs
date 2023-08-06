@@ -1,12 +1,14 @@
 mod camera;
 mod key_binding;
 mod render;
+mod world;
 
 use bevy::math::vec3;
 use bevy::prelude::*;
 use crate::camera::CameraPlugin;
 use crate::key_binding::KeyBindingsPlugin;
 use crate::render::{AbsoluteBlockFaceDirection, MeshBuilder, MeshPart};
+use crate::world::{Chunk, CHUNK_SIZE_USIZE};
 
 
 fn main() {
@@ -42,30 +44,31 @@ fn setup(
     });
 
     commands.spawn(PbrBundle {
-        mesh: meshes.add(create_block_mesh()),
+        mesh: meshes.add(create_chunk_mesh()),
         material: materials.add(Color::rgb(0.8, 0.7, 0.6).into()),
         transform: Transform::from_xyz(0.0, 0.5, 0.0),
         ..default()
     });
 }
 
-fn create_block_mesh() -> Mesh {
+fn create_chunk_mesh() -> Mesh {
     let mut builder = MeshBuilder::new();
-    builder.add_mesh_data(AbsoluteBlockFaceDirection::PosX);
-    builder.add_mesh_data(AbsoluteBlockFaceDirection::NegX);
-    builder.add_mesh_data(AbsoluteBlockFaceDirection::PosY);
-    builder.add_mesh_data(AbsoluteBlockFaceDirection::NegY);
-    builder.add_mesh_data(AbsoluteBlockFaceDirection::PosZ);
-    builder.add_mesh_data(AbsoluteBlockFaceDirection::NegZ);
-
-    builder.set_transition(vec3(0.5, 1., 0.));
-
-    builder.add_mesh_data(AbsoluteBlockFaceDirection::PosX);
-    builder.add_mesh_data(AbsoluteBlockFaceDirection::NegX);
-    builder.add_mesh_data(AbsoluteBlockFaceDirection::PosY);
-    builder.add_mesh_data(AbsoluteBlockFaceDirection::NegY);
-    builder.add_mesh_data(AbsoluteBlockFaceDirection::PosZ);
-    builder.add_mesh_data(AbsoluteBlockFaceDirection::NegZ);
-
+    let chunk = Chunk::new(42);
+    for x in 0..CHUNK_SIZE_USIZE {
+        for y in 0..CHUNK_SIZE_USIZE {
+            for z in 0..CHUNK_SIZE_USIZE {
+                if chunk.blocks[x][y][z] {
+                    builder.set_transition(vec3(x as f32, y as f32, z as f32));
+                    builder.add_mesh_data(AbsoluteBlockFaceDirection::PosX);
+                    builder.add_mesh_data(AbsoluteBlockFaceDirection::NegX);
+                    builder.add_mesh_data(AbsoluteBlockFaceDirection::PosY);
+                    builder.add_mesh_data(AbsoluteBlockFaceDirection::NegY);
+                    builder.add_mesh_data(AbsoluteBlockFaceDirection::PosZ);
+                    builder.add_mesh_data(AbsoluteBlockFaceDirection::NegZ);
+                }
+            }
+        }
+    }
     builder.build()
 }
+

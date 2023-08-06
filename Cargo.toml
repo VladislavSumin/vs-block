@@ -3,8 +3,9 @@ name = "vs-block"
 version = "0.1.0"
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
-bevy = {version = "0.11"}
-bevy_renet={version = "0.0.9"}
+# Основной графический движок
+bevy = { version = "0.11" }
+
+# Генерация случайных чисел
+rand = "0.8.5"
