@@ -1,4 +1,5 @@
 use std::ops::Index;
+use bevy::prelude::{Component, Resource};
 use rand::prelude::StdRng;
 use rand::{Rng, SeedableRng};
 use crate::world::block::{Block, BlockType};
@@ -8,6 +9,7 @@ pub const CHUNK_SIZE: u8 = 16;
 pub const CHUNK_SIZE_USIZE: usize = CHUNK_SIZE as usize;
 
 /// Сущность описывающая один игровой чанк
+#[derive(Component)]
 pub struct Chunk {
     blocks: [[[Option<Block>; CHUNK_SIZE_USIZE]; CHUNK_SIZE_USIZE]; CHUNK_SIZE_USIZE],
 }

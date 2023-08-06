@@ -7,7 +7,7 @@ use bevy::prelude::*;
 use crate::camera::CameraPlugin;
 use crate::key_binding::KeyBindingsPlugin;
 use crate::render::{AbsoluteBlockFaceDirection, MeshBuilder};
-use crate::world::chunk::Chunk;
+use crate::world::chunk::{Chunk, ChunkPlugin};
 
 
 fn main() {
@@ -15,6 +15,7 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_plugins(KeyBindingsPlugin)
         .add_plugins(CameraPlugin)
+        .add_plugins(ChunkPlugin)
         .add_systems(Startup, setup)
         .run();
 }
