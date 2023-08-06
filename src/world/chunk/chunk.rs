@@ -1,14 +1,15 @@
-use rand::rngs::StdRng;
+use std::ops::Index;
+use rand::prelude::StdRng;
 use rand::{Rng, SeedableRng};
 use crate::world::block::{Block, BlockType};
+use crate::world::chunk::ChunkBlockCoord;
 
 pub const CHUNK_SIZE: u8 = 16;
 pub const CHUNK_SIZE_USIZE: usize = CHUNK_SIZE as usize;
 
 /// Сущность описывающая один игровой чанк
 pub struct Chunk {
-    // temp solution
-    pub blocks: [[[Option<Block>; CHUNK_SIZE_USIZE]; CHUNK_SIZE_USIZE]; CHUNK_SIZE_USIZE],
+    blocks: [[[Option<Block>; CHUNK_SIZE_USIZE]; CHUNK_SIZE_USIZE]; CHUNK_SIZE_USIZE],
 }
 
 impl Chunk {
@@ -34,5 +35,13 @@ impl Chunk {
         Self {
             blocks
         }
+    }
+}
+
+impl Index<&ChunkBlockCoord> for Chunk {
+    type Output = Option<Block>;
+
+    fn index(&self, index: &ChunkBlockCoord) -> &Self::Output {
+        &self.blocks[index.x as usize][index.y as usize][index.z as usize]
     }
 }

@@ -3,12 +3,11 @@ mod key_binding;
 mod render;
 mod world;
 
-use bevy::math::vec3;
 use bevy::prelude::*;
 use crate::camera::CameraPlugin;
 use crate::key_binding::KeyBindingsPlugin;
 use crate::render::{AbsoluteBlockFaceDirection, MeshBuilder};
-use crate::world::chunk::{Chunk, CHUNK_SIZE_USIZE};
+use crate::world::chunk::Chunk;
 
 
 fn main() {
@@ -54,19 +53,15 @@ fn setup(
 fn create_chunk_mesh() -> Mesh {
     let mut builder = MeshBuilder::new();
     let chunk = Chunk::new(42);
-    for x in 0..CHUNK_SIZE_USIZE {
-        for y in 0..CHUNK_SIZE_USIZE {
-            for z in 0..CHUNK_SIZE_USIZE {
-                if let Some(_) = chunk.blocks[x][y][z] {
-                    builder.set_transition(vec3(x as f32, y as f32, z as f32));
-                    builder.add_mesh_data(AbsoluteBlockFaceDirection::PosX);
-                    builder.add_mesh_data(AbsoluteBlockFaceDirection::NegX);
-                    builder.add_mesh_data(AbsoluteBlockFaceDirection::PosY);
-                    builder.add_mesh_data(AbsoluteBlockFaceDirection::NegY);
-                    builder.add_mesh_data(AbsoluteBlockFaceDirection::PosZ);
-                    builder.add_mesh_data(AbsoluteBlockFaceDirection::NegZ);
-                }
-            }
+    for (block_coord, block) in chunk.into_iter() {
+        if let Some(_) = block {
+            builder.set_transition(block_coord.into());
+            builder.add_mesh_data(AbsoluteBlockFaceDirection::PosX);
+            builder.add_mesh_data(AbsoluteBlockFaceDirection::NegX);
+            builder.add_mesh_data(AbsoluteBlockFaceDirection::PosY);
+            builder.add_mesh_data(AbsoluteBlockFaceDirection::NegY);
+            builder.add_mesh_data(AbsoluteBlockFaceDirection::PosZ);
+            builder.add_mesh_data(AbsoluteBlockFaceDirection::NegZ);
         }
     }
     builder.build()
