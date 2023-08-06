@@ -5,6 +5,8 @@ use bevy::prelude::{Changed, Color, Commands, default, Entity, info, Mesh, Query
 use crate::render::{AbsoluteBlockFaceDirection, MeshBuilder};
 use crate::world::chunk::Chunk;
 
+/// Отвечает за генерацию [Mesh] для загруженных [Chunk], а так же за обновление [Mesh] при
+/// обновлении [Chunk]
 pub struct ChunkRenderPlugin;
 
 impl Plugin for ChunkRenderPlugin {
