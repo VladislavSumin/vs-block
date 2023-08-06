@@ -1,11 +1,11 @@
 mod camera;
 mod key_binding;
+mod render;
 
-use std::ops::Deref;
 use bevy::prelude::*;
-use bevy::render::mesh::{Indices, PrimitiveTopology};
 use crate::camera::CameraPlugin;
 use crate::key_binding::KeyBindingsPlugin;
+use crate::render::{MeshBuilder, MeshPart};
 
 
 fn main() {
@@ -50,14 +50,10 @@ fn setup(
 }
 
 fn create_block_mesh() -> Mesh {
-    let mesh_data: BlockFaceMeshData = AbsoluteBlockFaceDirection::PosY.into();
-
-    let mut mesh = Mesh::new(PrimitiveTopology::TriangleList);
-    mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, mesh_data.positions.to_vec());
-    mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, mesh_data.normals.to_vec());
-    mesh.insert_attribute(Mesh::ATTRIBUTE_UV_0, mesh_data.uvs.to_vec());
-    mesh.set_indices(Some(Indices::U32((*mesh_data.indexes).into())));
-    mesh
+    let mut builder = MeshBuilder::new();
+    builder.add_mesh_data(BlockFaceMeshData::from(AbsoluteBlockFaceDirection::PosY));
+    builder.add_mesh_data(BlockFaceMeshData::from(AbsoluteBlockFaceDirection::PosX));
+    builder.build()
 }
 
 /// Координаты блока относительно чанка
@@ -283,5 +279,23 @@ impl From<AbsoluteBlockFaceDirection> for BlockFaceMeshData {
             normals: value.get_normals(),
             uvs: value.get_uvs(),
         }
+    }
+}
+
+impl MeshPart for BlockFaceMeshData {
+    fn get_indexes(&self) -> &[u32] {
+        self.indexes
+    }
+
+    fn get_positions(&self) -> &[[f32; 3]] {
+        self.positions
+    }
+
+    fn get_normals(&self) -> &[[f32; 3]] {
+        self.normals
+    }
+
+    fn get_uvs(&self) -> &[[f32; 2]] {
+        self.uvs
     }
 }
