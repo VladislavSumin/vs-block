@@ -25,7 +25,7 @@ impl Default for MovementSettings {
     fn default() -> Self {
         Self {
             sensitivity: 0.0002,
-            speed: 12.,
+            speed: 6.,
         }
     }
 }
@@ -33,6 +33,16 @@ impl Default for MovementSettings {
 /// Маркер для дефолтной камеры игрока
 #[derive(Component)]
 pub struct PlayerCamera;
+
+impl Plugin for CameraPlugin {
+    fn build(&self, app: &mut App) {
+        app
+            .init_resource::<InputState>()
+            .init_resource::<MovementSettings>()
+            .add_systems(Startup, setup_player_camera)
+            .add_systems(Update, (player_move, player_look, cursor_grab));
+    }
+}
 
 /// Создает и настраивает дефолтную камеру игрока
 fn setup_player_camera(mut commands: Commands) {
@@ -138,16 +148,6 @@ fn cursor_grab(
         }
     } else {
         warn!("Primary window not found for `cursor_grab`!");
-    }
-}
-
-impl Plugin for CameraPlugin {
-    fn build(&self, app: &mut App) {
-        app
-            .init_resource::<InputState>()
-            .init_resource::<MovementSettings>()
-            .add_systems(Startup, setup_player_camera)
-            .add_systems(Update, (player_move, player_look, cursor_grab));
     }
 }
 
