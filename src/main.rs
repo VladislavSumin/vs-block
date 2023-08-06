@@ -1,8 +1,14 @@
+mod camera;
+mod key_binding;
+
 use bevy::prelude::*;
+use crate::key_binding::KeyBindingsPlugin;
+
 
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
+        .add_plugins(KeyBindingsPlugin)
         .add_systems(Startup, setup)
         .run();
 }
