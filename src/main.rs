@@ -1,7 +1,9 @@
 mod camera;
 mod key_binding;
 
+use std::ops::Deref;
 use bevy::prelude::*;
+use bevy::render::mesh::{Indices, PrimitiveTopology};
 use crate::camera::CameraPlugin;
 use crate::key_binding::KeyBindingsPlugin;
 
@@ -27,13 +29,6 @@ fn setup(
         material: materials.add(Color::rgb(0.3, 0.5, 0.3).into()),
         ..default()
     });
-    // cube
-    commands.spawn(PbrBundle {
-        mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
-        material: materials.add(Color::rgb(0.8, 0.7, 0.6).into()),
-        transform: Transform::from_xyz(0.0, 0.5, 0.0),
-        ..default()
-    });
     // light
     commands.spawn(PointLightBundle {
         point_light: PointLight {
@@ -44,4 +39,249 @@ fn setup(
         transform: Transform::from_xyz(4.0, 8.0, 4.0),
         ..default()
     });
+
+    // сторона куба, это почти целый куб, только нужно еще 5 сторон
+    commands.spawn(PbrBundle {
+        mesh: meshes.add(create_block_mesh()),
+        material: materials.add(Color::rgb(0.8, 0.7, 0.6).into()),
+        transform: Transform::from_xyz(0.0, 0.5, 0.0),
+        ..default()
+    });
+}
+
+fn create_block_mesh() -> Mesh {
+    let mesh_data: BlockFaceMeshData = AbsoluteBlockFaceDirection::PosY.into();
+
+    let mut mesh = Mesh::new(PrimitiveTopology::TriangleList);
+    mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, mesh_data.positions.to_vec());
+    mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, mesh_data.normals.to_vec());
+    mesh.insert_attribute(Mesh::ATTRIBUTE_UV_0, mesh_data.uvs.to_vec());
+    mesh.set_indices(Some(Indices::U32((*mesh_data.indexes).into())));
+    mesh
+}
+
+/// Координаты блока относительно чанка
+#[derive(Default)]
+struct ChunkBlockCoord {
+    x: u8,
+    y: u8,
+    z: u8,
+}
+
+/// Направление стороны блока в абсолютных координатах
+enum AbsoluteBlockFaceDirection {
+    /// Позитивное направление оси X, или правая сторона
+    PosX,
+
+    /// Негативное направление оси X, или левая сторона
+    NegX,
+
+    /// Позитивное направление оси Y, или верхняя сторона
+    PosY,
+
+    /// Негативное направление оси Y, или нижняя сторона
+    NegY,
+
+    /// Позитивное направление оси Z, или передняя сторона
+    PosZ,
+
+    /// Негативное направление оси Z, или задняя сторона
+    NegZ,
+}
+
+impl AbsoluteBlockFaceDirection {
+    /// Возвращает массив позиций для текущего [AbsoluteBlockFaceDirection]
+    /// Для описания стороны блока нужно 4 вершины каждая из которых описывается 3мя координатами
+    fn get_vertex_positions(&self) -> &'static [[f32; 3]; 4] {
+        match self {
+            AbsoluteBlockFaceDirection::PosX => {
+                &[
+                    [1., 0., 0.],
+                    [1., 1., 0.],
+                    [1., 1., 1.],
+                    [1., 0., 1.],
+                ]
+            }
+            AbsoluteBlockFaceDirection::NegX => {
+                &[
+                    [0., 0., 0.],
+                    [0., 1., 0.],
+                    [0., 1., 1.],
+                    [0., 0., 1.],
+                ]
+            }
+            AbsoluteBlockFaceDirection::PosY => {
+                &[
+                    [1., 1., 0.],
+                    [0., 1., 0.],
+                    [0., 1., 1.],
+                    [1., 1., 1.],
+                ]
+            }
+            AbsoluteBlockFaceDirection::NegY => {
+                &[
+                    [1., 0., 0.],
+                    [0., 0., 0.],
+                    [0., 0., 1.],
+                    [1., 0., 1.],
+                ]
+            }
+            AbsoluteBlockFaceDirection::PosZ => {
+                &[
+                    [0., 0., 1.],
+                    [1., 0., 1.],
+                    [1., 1., 1.],
+                    [0., 1., 1.],
+                ]
+            }
+            AbsoluteBlockFaceDirection::NegZ => {
+                &[
+                    [0., 0., 0.],
+                    [1., 0., 0.],
+                    [1., 1., 0.],
+                    [0., 1., 0.],
+                ]
+            }
+        }
+    }
+
+    /// Возвращает нормалей позиций для текущего [AbsoluteBlockFaceDirection]
+    /// Количество нормалей должно соответствовать количеству вершин у вертекса,
+    /// у каждой вершины своя нормаль, см [Self::get_vertex_positions].
+    /// Для описания нормали нужны 3 координаты
+    fn get_normals(&self) -> &'static [[f32; 3]; 4] {
+        match self {
+            AbsoluteBlockFaceDirection::PosX => {
+                &[
+                    [1., 0., 0.],
+                    [1., 0., 0.],
+                    [1., 0., 0.],
+                    [1., 0., 0.],
+                ]
+            }
+            AbsoluteBlockFaceDirection::NegX => {
+                &[
+                    [-1., 0., 0.],
+                    [-1., 0., 0.],
+                    [-1., 0., 0.],
+                    [-1., 0., 0.],
+                ]
+            }
+            AbsoluteBlockFaceDirection::PosY => {
+                &[
+                    [0., 1., 0.],
+                    [0., 1., 0.],
+                    [0., 1., 0.],
+                    [0., 1., 0.],
+                ]
+            }
+            AbsoluteBlockFaceDirection::NegY => {
+                &[
+                    [0., -1., 0.],
+                    [0., -1., 0.],
+                    [0., -1., 0.],
+                    [0., -1., 0.],
+                ]
+            }
+            AbsoluteBlockFaceDirection::PosZ => {
+                &[
+                    [0., 0., 1.],
+                    [0., 0., 1.],
+                    [0., 0., 1.],
+                    [0., 0., 1.],
+                ]
+            }
+            AbsoluteBlockFaceDirection::NegZ => {
+                &[
+                    [0., 0., -1.],
+                    [0., 0., -1.],
+                    [0., 0., -1.],
+                    [0., 0., -1.],
+                ]
+            }
+        }
+    }
+
+    /// Возвращает массив позиций текстуры для текущего [AbsoluteBlockFaceDirection]
+    /// Количество позиций текстуры должно соответствовать количеству вершин у вертекса,
+    /// у каждой вершины своя позиция текстуры, см [Self::get_vertex_positions]
+    /// Для описания позиции текстуры нужны 2 координаты
+    fn get_uvs(&self) -> &'static [[f32; 2]; 4] {
+        match self {
+            AbsoluteBlockFaceDirection::PosX => {
+                &[
+                    [0., 0.],
+                    [1., 0.],
+                    [1., 1.],
+                    [0., 1.],
+                ]
+            }
+            AbsoluteBlockFaceDirection::NegX => {
+                &[
+                    [1., 0.],
+                    [0., 0.],
+                    [0., 1.],
+                    [1., 1.],
+                ]
+            }
+            AbsoluteBlockFaceDirection::PosY => {
+                &[
+                    [1., 0.],
+                    [0., 0.],
+                    [0., 1.],
+                    [1., 1.],
+                ]
+            }
+            AbsoluteBlockFaceDirection::NegY => {
+                &[
+                    [0., 0.],
+                    [1., 0.],
+                    [1., 1.],
+                    [0., 1.],
+                ]
+            }
+            AbsoluteBlockFaceDirection::PosZ => {
+                &[
+                    [0., 0.],
+                    [1., 0.],
+                    [1., 1.],
+                    [0., 1.],
+                ]
+            }
+            AbsoluteBlockFaceDirection::NegZ => {
+                &[
+                    [1., 0.],
+                    [0., 0.],
+                    [0., 1.],
+                    [1., 1.],
+                ]
+            }
+        }
+    }
+
+    /// Индексы описывают в какой в последовательности замыкать вершины в треугольники
+    /// От направления обхода зависит в какую сторону будет смотреть плоскость треугольника, с
+    /// другой стороны треугольник не будет виден
+    fn get_indexes() -> &'static [u32; 6] {
+        &[0, 1, 2, 2, 3, 0]
+    }
+}
+
+/// Информация необходимая для построения одной стороны блока
+struct BlockFaceMeshData {
+    indexes: &'static [u32; 6],
+    positions: &'static [[f32; 3]; 4],
+    normals: &'static [[f32; 3]; 4],
+    uvs: &'static [[f32; 2]; 4],
+}
+
+impl From<AbsoluteBlockFaceDirection> for BlockFaceMeshData {
+    fn from(value: AbsoluteBlockFaceDirection) -> Self {
+        BlockFaceMeshData {
+            indexes: AbsoluteBlockFaceDirection::get_indexes(),
+            positions: value.get_vertex_positions(),
+            normals: value.get_normals(),
+            uvs: value.get_uvs(),
+        }
+    }
 }
