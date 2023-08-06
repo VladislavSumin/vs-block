@@ -1,3 +1,2 @@
-mod chunk;
-
-pub use chunk::{Chunk, CHUNK_SIZE_USIZE};
+pub mod chunk;
+pub mod block;

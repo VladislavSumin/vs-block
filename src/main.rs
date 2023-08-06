@@ -7,8 +7,8 @@ use bevy::math::vec3;
 use bevy::prelude::*;
 use crate::camera::CameraPlugin;
 use crate::key_binding::KeyBindingsPlugin;
-use crate::render::{AbsoluteBlockFaceDirection, MeshBuilder, MeshPart};
-use crate::world::{Chunk, CHUNK_SIZE_USIZE};
+use crate::render::{AbsoluteBlockFaceDirection, MeshBuilder};
+use crate::world::chunk::{Chunk, CHUNK_SIZE_USIZE};
 
 
 fn main() {
@@ -57,7 +57,7 @@ fn create_chunk_mesh() -> Mesh {
     for x in 0..CHUNK_SIZE_USIZE {
         for y in 0..CHUNK_SIZE_USIZE {
             for z in 0..CHUNK_SIZE_USIZE {
-                if chunk.blocks[x][y][z] {
+                if let Some(_) = chunk.blocks[x][y][z] {
                     builder.set_transition(vec3(x as f32, y as f32, z as f32));
                     builder.add_mesh_data(AbsoluteBlockFaceDirection::PosX);
                     builder.add_mesh_data(AbsoluteBlockFaceDirection::NegX);
