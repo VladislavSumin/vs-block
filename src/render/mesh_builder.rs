@@ -12,15 +12,30 @@ pub trait MeshPart {
 /// Mesh builder для преобразования набора [MeshPart] в [Mesh]
 #[derive(Default)]
 pub struct MeshBuilder {
+    /// Индексы вершин вертекса
     indexes: Vec<u32>,
+
+    /// Вершины вертекса
     positions: Vec<[f32; 3]>,
+
+    /// Нормали к вершинам вертекса
     normals: Vec<[f32; 3]>,
+
+    /// Координаты текстуры вершин вертекса
     uvs: Vec<[f32; 2]>,
+
+    /// Сдвиг
+    /// Этот сдвиг будет применен ко всем [MeshPart::get_positions] при добавлении в [Self]
+    transition: Vec3,
 }
 
 impl MeshBuilder {
     pub fn new() -> Self {
         Self::default()
+    }
+
+    pub fn set_transition(&mut self, transition: Vec3) {
+        self.transition = transition;
     }
 
     pub fn add_mesh_data<T: MeshPart>(&mut self, mesh_data: T) {
@@ -39,8 +54,12 @@ impl MeshBuilder {
                 uvs.len(),
             );
         }
-
-        self.positions.extend(positions);
+        let translated_positions = positions
+            .into_iter()
+            .map(|pos| {
+                [pos[0] + self.transition.x, pos[1] + self.transition.y, pos[2] + self.transition.z, ]
+            });
+        self.positions.extend(translated_positions);
         self.normals.extend(normals);
         self.uvs.extend(uvs);
     }

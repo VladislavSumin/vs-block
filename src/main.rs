@@ -2,6 +2,7 @@ mod camera;
 mod key_binding;
 mod render;
 
+use bevy::math::vec3;
 use bevy::prelude::*;
 use crate::camera::CameraPlugin;
 use crate::key_binding::KeyBindingsPlugin;
@@ -40,7 +41,6 @@ fn setup(
         ..default()
     });
 
-    // сторона куба, это почти целый куб, только нужно еще 5 сторон
     commands.spawn(PbrBundle {
         mesh: meshes.add(create_block_mesh()),
         material: materials.add(Color::rgb(0.8, 0.7, 0.6).into()),
@@ -57,5 +57,15 @@ fn create_block_mesh() -> Mesh {
     builder.add_mesh_data(AbsoluteBlockFaceDirection::NegY);
     builder.add_mesh_data(AbsoluteBlockFaceDirection::PosZ);
     builder.add_mesh_data(AbsoluteBlockFaceDirection::NegZ);
+
+    builder.set_transition(vec3(0.5, 1., 0.));
+
+    builder.add_mesh_data(AbsoluteBlockFaceDirection::PosX);
+    builder.add_mesh_data(AbsoluteBlockFaceDirection::NegX);
+    builder.add_mesh_data(AbsoluteBlockFaceDirection::PosY);
+    builder.add_mesh_data(AbsoluteBlockFaceDirection::NegY);
+    builder.add_mesh_data(AbsoluteBlockFaceDirection::PosZ);
+    builder.add_mesh_data(AbsoluteBlockFaceDirection::NegZ);
+
     builder.build()
 }
