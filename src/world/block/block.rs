@@ -1,10 +1,4 @@
-#[derive(Default)]
-pub enum BlockType {
-    #[default]
-    AIR,
-    BEDROCK,
-    GRASS,
-}
+use crate::world::block::BlockType;
 
 #[derive(Default)]
 pub struct Block {
