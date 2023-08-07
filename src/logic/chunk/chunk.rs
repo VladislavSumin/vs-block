@@ -3,7 +3,7 @@ use bevy::prelude::Component;
 use rand::prelude::StdRng;
 use rand::{Rng, SeedableRng};
 use crate::logic::block::{Block, BlockType};
-use crate::logic::chunk::chunk_coord::ChunkCoord;
+use crate::logic::world::ChunkCoord;
 use crate::logic::chunk::ChunkBlockCoord;
 
 pub const CHUNK_SIZE: u8 = 16;

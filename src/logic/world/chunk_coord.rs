@@ -15,6 +15,15 @@ impl ChunkCoord {
         Self { x, y, z }
     }
 
+    /// Возвращает координаты чанка внутри которого находятся [coord]
+    pub fn from_global_coord(coord: Vec3) -> Self {
+        ChunkCoord::new(
+            (coord.x as u32) / (CHUNK_SIZE as u32),
+            (coord.y as u32) / (CHUNK_SIZE as u32),
+            (coord.z as u32) / (CHUNK_SIZE as u32),
+        )
+    }
+
     /// Возвращает абсолютные координаты чанка в мире
     pub fn get_absolute_coord(&self) -> Vec3 {
         vec3(

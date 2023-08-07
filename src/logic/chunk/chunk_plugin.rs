@@ -1,7 +1,7 @@
 use bevy::app::{App, Plugin, Startup};
 use bevy::prelude::Commands;
 use crate::logic::chunk::Chunk;
-use crate::logic::chunk::chunk_coord::ChunkCoord;
+use crate::logic::world::ChunkCoord;
 
 /// Отвечает за загрузку и выгрузку [Chunk], а так же за их генерацию
 pub struct ChunkPlugin;

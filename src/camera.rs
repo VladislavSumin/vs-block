@@ -3,6 +3,7 @@ use bevy::input::mouse::MouseMotion;
 use bevy::prelude::*;
 use bevy::window::{CursorGrabMode, PrimaryWindow};
 use crate::key_binding::KeyBindings;
+use crate::logic::world::WorldAnchor;
 
 pub struct CameraPlugin;
 
@@ -53,6 +54,7 @@ fn setup_player_camera(mut commands: Commands) {
             ..default()
         },
         PlayerCamera,
+        WorldAnchor { load_radius: 2 },
     ));
 }
 
