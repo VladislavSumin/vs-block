@@ -4,6 +4,7 @@ use bevy::pbr::{PbrBundle, StandardMaterial};
 use bevy::prelude::*;
 use crate::render::{AbsoluteBlockFaceDirection, MeshBuilder};
 use crate::logic::chunk::Chunk;
+use crate::logic::world::{ChunkCoord, World};
 
 /// Отвечает за генерацию [Mesh] для загруженных [Chunk], а так же за обновление [Mesh] при
 /// обновлении [Chunk]
@@ -19,17 +20,19 @@ impl Plugin for ChunkRenderPlugin {
 // TODO тестовая таска, переписать полностью
 fn update_chunk_mesh(
     mut commands: Commands,
-    updated_chunks: Query<(Entity, &Chunk), Changed<Chunk>>,
+    updated_chunks: Query<(Entity, &ChunkCoord), Changed<ChunkCoord>>,
+    world: Res<World>,
     mut assets: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    for (entity, chunk) in updated_chunks.iter() {
+    for (entity, chunk_coord) in updated_chunks.iter() {
+        let chunk = world.get_chunk(chunk_coord).unwrap();
         let mesh = assets.add(create_chunk_mesh(chunk));
         commands.entity(entity).insert(
             PbrBundle {
                 mesh,
                 material: materials.add(Color::rgb(0.8, 0.7, 0.6).into()),
-                transform: Transform::from_translation(chunk.get_coordinates().get_absolute_coord()),
+                transform: Transform::from_translation(chunk_coord.get_absolute_coord()),
                 ..default()
             }
         );

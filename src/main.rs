@@ -8,7 +8,6 @@ use bevy::prelude::*;
 use crate::camera::CameraPlugin;
 use crate::key_binding::KeyBindingsPlugin;
 use crate::render::ChunkRenderPlugin;
-use crate::logic::chunk::ChunkPlugin;
 use crate::logic::world::WorldPlugin;
 use crate::render::debug::DebugInfoRenderPlugin;
 
@@ -18,7 +17,6 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_plugins(KeyBindingsPlugin)
         .add_plugins(CameraPlugin)
-        .add_plugins(ChunkPlugin)
         .add_plugins(WorldPlugin)
         .add_plugins(ChunkRenderPlugin)
         .add_plugins(FrameTimeDiagnosticsPlugin)

@@ -1,26 +1,20 @@
 use std::ops::Index;
-use bevy::prelude::Component;
 use rand::prelude::StdRng;
 use rand::{Rng, SeedableRng};
 use crate::logic::block::{Block, BlockType};
-use crate::logic::world::ChunkCoord;
 use crate::logic::chunk::ChunkBlockCoord;
 
 pub const CHUNK_SIZE: u8 = 16;
 pub const CHUNK_SIZE_USIZE: usize = CHUNK_SIZE as usize;
 
 /// Сущность описывающая один игровой чанк
-#[derive(Component)]
 pub struct Chunk {
-    /// Позиция чанка в мире (в координатах сетки чанков)
-    coordinates: ChunkCoord,
-
     /// Массив со всеми блоками в чанке
     blocks: [[[Option<Block>; CHUNK_SIZE_USIZE]; CHUNK_SIZE_USIZE]; CHUNK_SIZE_USIZE],
 }
 
 impl Chunk {
-    pub fn new(coordinates: ChunkCoord, seed: u32) -> Self {
+    pub fn new(seed: u32) -> Self {
         let mut rand = StdRng::seed_from_u64(seed as u64);
         let mut blocks: [[[Option<Block>; CHUNK_SIZE_USIZE]; CHUNK_SIZE_USIZE]; CHUNK_SIZE_USIZE] = Default::default();
 
@@ -40,13 +34,8 @@ impl Chunk {
         }
 
         Self {
-            coordinates,
             blocks,
         }
-    }
-
-    pub fn get_coordinates(&self) -> &ChunkCoord {
-        &self.coordinates
     }
 }
 
