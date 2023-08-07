@@ -27,7 +27,7 @@ impl Chunk {
         for x in 0..CHUNK_SIZE_USIZE {
             for y in 0..CHUNK_SIZE_USIZE {
                 for z in 0..CHUNK_SIZE_USIZE {
-                    if y == 0 {
+                    if z == 0 {
                         blocks[x][y][z] = Some(Block::new(BlockType::BEDROCK));
                         continue;
                     }

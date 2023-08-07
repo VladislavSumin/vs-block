@@ -1,6 +1,8 @@
+use std::f32::consts::PI;
 use bevy::ecs::event::ManualEventReader;
 use bevy::input::mouse::MouseMotion;
 use bevy::prelude::*;
+use bevy::prelude::KeyCode::P;
 use bevy::window::{CursorGrabMode, PrimaryWindow};
 use crate::key_binding::KeyBindings;
 use crate::logic::world::WorldAnchor;
@@ -51,6 +53,7 @@ fn setup_player_camera(mut commands: Commands) {
     commands.spawn((
         Camera3dBundle {
             transform: Transform::from_xyz(-2.0, 2.5, 5.0).looking_at(Vec3::ZERO, Vec3::Y),
+            // transform: Transform::from_xyz(-2.0, 2.5, 5.0).looking_at(Vec3::ZERO, Vec3::Z),
             ..default()
         },
         PlayerCamera,
@@ -70,9 +73,13 @@ fn player_move(
     if let Ok(window) = primary_window.get_single() {
         for (_camera, mut transform) in query.iter_mut() {
             let mut velocity = Vec3::ZERO;
-            let local_z = transform.local_z();
-            let forward = -Vec3::new(local_z.x, 0., local_z.z);
-            let right = Vec3::new(local_z.z, 0., -local_z.x);
+            // let local_z = transform.local_z();
+            // let forward = -Vec3::new(local_z.x, 0., local_z.z);
+            // let right = Vec3::new(local_z.z, 0., -local_z.x);
+
+            let local_y = transform.local_x();
+            let forward = -Vec3::new(local_y.y, -local_y.x, 0.);
+            let right = Vec3::new(local_y.x, local_y.y, 0.);
 
             for key in keys.get_pressed() {
                 match window.cursor.grab_mode {
@@ -88,9 +95,11 @@ fn player_move(
                         } else if key == key_bindings.move_right {
                             velocity += right;
                         } else if key == key_bindings.move_up {
-                            velocity += Vec3::Y;
+                            // velocity += Vec3::Y;
+                            velocity += Vec3::Z;
                         } else if key == key_bindings.move_down {
-                            velocity -= Vec3::Y;
+                            // velocity -= Vec3::Y;
+                            velocity -= Vec3::Z;
                         }
                     }
                 }
@@ -116,7 +125,8 @@ fn player_look(
     if let Ok(window) = primary_window.get_single() {
         for mut transform in query.iter_mut() {
             for ev in state.reader_motion.iter(&motion) {
-                let (mut yaw, mut pitch, _) = transform.rotation.to_euler(EulerRot::YXZ);
+                // let (mut yaw, mut pitch, _) = transform.rotation.to_euler(EulerRot::YXZ);
+                let (mut yaw, _, mut pitch) = transform.rotation.to_euler(EulerRot::ZYX);
                 match window.cursor.grab_mode {
                     CursorGrabMode::None => (),
                     _ => {
@@ -127,11 +137,14 @@ fn player_look(
                     }
                 }
 
-                pitch = pitch.clamp(-1.54, 1.54);
+                // pitch = pitch.clamp(-1.54, 1.54);
+                pitch = pitch.clamp(0.02 * PI, 0.98 * PI);
 
                 // Order is important to prevent unintended roll
                 transform.rotation =
-                    Quat::from_axis_angle(Vec3::Y, yaw) * Quat::from_axis_angle(Vec3::X, pitch);
+                    // Quat::from_axis_angle(Vec3::Y, yaw) * Quat::from_axis_angle(Vec3::X, pitch);
+                Quat::from_axis_angle(Vec3::Z, yaw) * Quat::from_axis_angle(Vec3::X, pitch);
+
             }
         }
     } else {

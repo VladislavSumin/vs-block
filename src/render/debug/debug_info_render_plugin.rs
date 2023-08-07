@@ -61,10 +61,10 @@ fn update_debug_info(
     text.clear();
     write!(
         text,
-        "  FPS:{:3} pos-> x:{:.01} y:{:.01} z:{:.01} rot-> x:{:.01} y:{:.01}",
+        "  FPS:{:3} pos-> x:{:.01} y:{:.01} z:{:.01} rot-> x:{:.01} y:{:.01} z:{:.01}",
         fps,
         player_coord.x, player_coord.y, player_coord.z,
-        player_rot.x, player_rot.y,
+        player_rot.x.to_degrees(), player_rot.y.to_degrees(), player_rot.z.to_degrees(),
     )
         .unwrap();
 }
