@@ -1,4 +1,4 @@
-use bevy::math::{Vec3, vec3};
+use bevy::math::{IVec3, ivec3, Vec3};
 use bevy::prelude::Component;
 use crate::logic::chunk::CHUNK_SIZE;
 
@@ -6,14 +6,12 @@ use crate::logic::chunk::CHUNK_SIZE;
 /// **Note** Например, второй чанк по оси Х, будет иметь координату X = 1, а не 16!
 #[derive(Default, Hash, Eq, PartialEq, Clone, Copy, Debug, Component)]
 pub struct ChunkCoord {
-    pub x: i32,
-    pub y: i32,
-    pub z: i32,
+    coord: IVec3,
 }
 
 impl ChunkCoord {
     pub fn new(x: i32, y: i32, z: i32) -> Self {
-        Self { x, y, z }
+        Self { coord: ivec3(x, y, z) }
     }
 
     /// Возвращает координаты чанка внутри которого находятся [coord]
@@ -28,11 +26,7 @@ impl ChunkCoord {
 
     /// Возвращает абсолютные координаты чанка в мире
     pub fn get_absolute_coord(&self) -> Vec3 {
-        vec3(
-            (self.x * CHUNK_SIZE as i32) as f32,
-            (self.y * CHUNK_SIZE as i32) as f32,
-            (self.z * CHUNK_SIZE as i32) as f32,
-        )
+        (self.coord * CHUNK_SIZE as i32).as_vec3()
     }
 }
 
@@ -44,32 +38,32 @@ mod tests {
     #[test]
     fn from_global_coord_min_coord() {
         let coord = ChunkCoord::from_global_coord(vec3(0., 0., 0.));
-        assert_eq!(coord.x, 0);
-        assert_eq!(coord.y, 0);
-        assert_eq!(coord.z, 0);
+        assert_eq!(coord.coord.x, 0);
+        assert_eq!(coord.coord.y, 0);
+        assert_eq!(coord.coord.z, 0);
     }
 
     #[test]
     fn from_global_coord_inside_chunk_coord() {
         let coord = ChunkCoord::from_global_coord(vec3(1., 2., 15.99));
-        assert_eq!(coord.x, 0);
-        assert_eq!(coord.y, 0);
-        assert_eq!(coord.z, 0);
+        assert_eq!(coord.coord.x, 0);
+        assert_eq!(coord.coord.y, 0);
+        assert_eq!(coord.coord.z, 0);
     }
 
     #[test]
     fn from_global_coord_second_chunk() {
         let coord = ChunkCoord::from_global_coord(vec3(18., 19., 22.));
-        assert_eq!(coord.x, 1);
-        assert_eq!(coord.y, 1);
-        assert_eq!(coord.z, 1);
+        assert_eq!(coord.coord.x, 1);
+        assert_eq!(coord.coord.y, 1);
+        assert_eq!(coord.coord.z, 1);
     }
 
     #[test]
     fn from_global_coord_negative_coord() {
         let coord = ChunkCoord::from_global_coord(vec3(-1., -2., 2.));
-        assert_eq!(coord.x, -1);
-        assert_eq!(coord.y, -1);
-        assert_eq!(coord.z, 0);
+        assert_eq!(coord.coord.x, -1);
+        assert_eq!(coord.coord.y, -1);
+        assert_eq!(coord.coord.z, 0);
     }
 }

@@ -27,8 +27,11 @@ fn load_chunks(
     // в будущем можно будет добавить поддержку работы с несколькими якорями
 
     let (transform, world_anchor) = world_anchors.single();
-    let mut anchor_chunk_coord = ChunkCoord::from_global_coord(transform.translation);
-    anchor_chunk_coord.z = 0;
+
+    // Получаем координаты чанка в котором находится WorldAnchor
+    let mut anchor_chunk_coord = transform.translation;
+    anchor_chunk_coord.z = 0.;
+    let anchor_chunk_coord = ChunkCoord::from_global_coord(anchor_chunk_coord);
 
     // TODO поддержать load_radius
     let load_radius = world_anchor.load_radius;

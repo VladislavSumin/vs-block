@@ -1,4 +1,5 @@
 use std::ops::Index;
+use bevy::prelude::Entity;
 use rand::prelude::StdRng;
 use rand::{Rng, SeedableRng};
 use crate::logic::block::{Block, BlockType};
@@ -9,12 +10,14 @@ pub const CHUNK_SIZE_USIZE: usize = CHUNK_SIZE as usize;
 
 /// Сущность описывающая один игровой чанк
 pub struct Chunk {
+    /// Сущность к которой прикреплен данный чанк
+    entity: Entity,
     /// Массив со всеми блоками в чанке
     blocks: [[[Option<Block>; CHUNK_SIZE_USIZE]; CHUNK_SIZE_USIZE]; CHUNK_SIZE_USIZE],
 }
 
 impl Chunk {
-    pub fn new(seed: u32) -> Self {
+    pub fn new(entity: Entity, seed: u32) -> Self {
         let mut rand = StdRng::seed_from_u64(seed as u64);
         let mut blocks: [[[Option<Block>; CHUNK_SIZE_USIZE]; CHUNK_SIZE_USIZE]; CHUNK_SIZE_USIZE] = Default::default();
 
@@ -34,6 +37,7 @@ impl Chunk {
         }
 
         Self {
+            entity,
             blocks,
         }
     }
