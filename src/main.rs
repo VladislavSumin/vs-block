@@ -3,12 +3,14 @@ mod key_binding;
 mod render;
 mod logic;
 
+use bevy::diagnostic::FrameTimeDiagnosticsPlugin;
 use bevy::prelude::*;
 use crate::camera::CameraPlugin;
 use crate::key_binding::KeyBindingsPlugin;
 use crate::render::ChunkRenderPlugin;
 use crate::logic::chunk::ChunkPlugin;
 use crate::logic::world::WorldPlugin;
+use crate::render::debug::DebugInfoRenderPlugin;
 
 
 fn main() {
@@ -19,6 +21,8 @@ fn main() {
         .add_plugins(ChunkPlugin)
         .add_plugins(WorldPlugin)
         .add_plugins(ChunkRenderPlugin)
+        .add_plugins(FrameTimeDiagnosticsPlugin)
+        .add_plugins(DebugInfoRenderPlugin)
         .add_systems(Startup, setup)
         .run();
 }

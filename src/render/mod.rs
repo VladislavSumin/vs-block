@@ -1,3 +1,5 @@
+pub mod debug;
+
 mod mesh_builder;
 mod block_face_mesh;
 mod chunk_render_plugin;
