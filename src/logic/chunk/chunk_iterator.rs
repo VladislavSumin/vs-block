@@ -1,5 +1,5 @@
-use crate::world::block::Block;
-use crate::world::chunk::{Chunk, CHUNK_SIZE, ChunkBlockCoord};
+use crate::logic::block::Block;
+use crate::logic::chunk::{Chunk, CHUNK_SIZE, ChunkBlockCoord};
 
 impl<'a> IntoIterator for &'a Chunk {
     type Item = (ChunkBlockCoord, &'a Option<Block>);

@@ -1,13 +1,13 @@
 mod camera;
 mod key_binding;
 mod render;
-mod world;
+mod logic;
 
 use bevy::prelude::*;
 use crate::camera::CameraPlugin;
 use crate::key_binding::KeyBindingsPlugin;
 use crate::render::ChunkRenderPlugin;
-use crate::world::chunk::ChunkPlugin;
+use crate::logic::chunk::ChunkPlugin;
 
 
 fn main() {

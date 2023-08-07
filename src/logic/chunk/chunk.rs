@@ -2,9 +2,9 @@ use std::ops::Index;
 use bevy::prelude::Component;
 use rand::prelude::StdRng;
 use rand::{Rng, SeedableRng};
-use crate::world::block::{Block, BlockType};
-use crate::world::chunk::chunk_coord::ChunkCoord;
-use crate::world::chunk::ChunkBlockCoord;
+use crate::logic::block::{Block, BlockType};
+use crate::logic::chunk::chunk_coord::ChunkCoord;
+use crate::logic::chunk::ChunkBlockCoord;
 
 pub const CHUNK_SIZE: u8 = 16;
 pub const CHUNK_SIZE_USIZE: usize = CHUNK_SIZE as usize;

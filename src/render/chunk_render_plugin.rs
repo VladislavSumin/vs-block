@@ -3,7 +3,7 @@ use bevy::asset::Assets;
 use bevy::pbr::{PbrBundle, StandardMaterial};
 use bevy::prelude::*;
 use crate::render::{AbsoluteBlockFaceDirection, MeshBuilder};
-use crate::world::chunk::Chunk;
+use crate::logic::chunk::Chunk;
 
 /// Отвечает за генерацию [Mesh] для загруженных [Chunk], а так же за обновление [Mesh] при
 /// обновлении [Chunk]

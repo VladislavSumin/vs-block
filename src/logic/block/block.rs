@@ -1,4 +1,4 @@
-use crate::world::block::BlockType;
+use crate::logic::block::BlockType;
 
 #[derive(Default)]
 pub struct Block {

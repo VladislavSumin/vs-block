@@ -1,5 +1,5 @@
 use bevy::math::{Vec3, vec3};
-use crate::world::chunk::CHUNK_SIZE;
+use crate::logic::chunk::CHUNK_SIZE;
 
 /// Координаты чанка в сетке чанков.
 /// **Note** Например, второй чанк по оси Х, будет иметь координату X = 1, а не 16!
