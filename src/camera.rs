@@ -3,7 +3,6 @@ use bevy::ecs::event::ManualEventReader;
 use bevy::input::mouse::MouseMotion;
 use bevy::math::vec3;
 use bevy::prelude::*;
-use bevy::prelude::KeyCode::P;
 use bevy::window::{CursorGrabMode, PrimaryWindow};
 use crate::key_binding::KeyBindings;
 use crate::logic::world::WorldAnchor;
@@ -71,47 +70,39 @@ fn player_move(
     key_bindings: Res<KeyBindings>,
     mut query: Query<(&PlayerCamera, &mut Transform)>, //    mut query: Query<&mut Transform, With<FlyCam>>,
 ) {
-    if let Ok(window) = primary_window.get_single() {
-        for (_camera, mut transform) in query.iter_mut() {
-            let mut velocity = Vec3::ZERO;
-            // let local_z = transform.local_z();
-            // let forward = -Vec3::new(local_z.x, 0., local_z.z);
-            // let right = Vec3::new(local_z.z, 0., -local_z.x);
+    let window = primary_window.single();
+    for (_camera, mut transform) in query.iter_mut() {
+        let mut velocity = Vec3::ZERO;
 
-            let local_y = transform.local_x();
-            let forward = -Vec3::new(local_y.y, -local_y.x, 0.);
-            let right = Vec3::new(local_y.x, local_y.y, 0.);
+        let local_y = transform.local_x();
+        let forward = -Vec3::new(local_y.y, -local_y.x, 0.);
+        let right = Vec3::new(local_y.x, local_y.y, 0.);
 
-            for key in keys.get_pressed() {
-                match window.cursor.grab_mode {
-                    CursorGrabMode::None => (),
-                    _ => {
-                        let key = *key;
-                        if key == key_bindings.move_forward {
-                            velocity += forward;
-                        } else if key == key_bindings.move_backward {
-                            velocity -= forward;
-                        } else if key == key_bindings.move_left {
-                            velocity -= right;
-                        } else if key == key_bindings.move_right {
-                            velocity += right;
-                        } else if key == key_bindings.move_up {
-                            // velocity += Vec3::Y;
-                            velocity += Vec3::Z;
-                        } else if key == key_bindings.move_down {
-                            // velocity -= Vec3::Y;
-                            velocity -= Vec3::Z;
-                        }
+        for key in keys.get_pressed() {
+            match window.cursor.grab_mode {
+                CursorGrabMode::None => (),
+                _ => {
+                    let key = *key;
+                    if key == key_bindings.move_forward {
+                        velocity += forward;
+                    } else if key == key_bindings.move_backward {
+                        velocity -= forward;
+                    } else if key == key_bindings.move_left {
+                        velocity -= right;
+                    } else if key == key_bindings.move_right {
+                        velocity += right;
+                    } else if key == key_bindings.move_up {
+                        velocity += Vec3::Z;
+                    } else if key == key_bindings.move_down {
+                        velocity -= Vec3::Z;
                     }
                 }
-
-                velocity = velocity.normalize_or_zero();
-
-                transform.translation += velocity * time.delta_seconds() * settings.speed
             }
+
+            velocity = velocity.normalize_or_zero();
+
+            transform.translation += velocity * time.delta_seconds() * settings.speed
         }
-    } else {
-        warn!("Primary window not found for `player_move`!");
     }
 }
 
@@ -123,32 +114,27 @@ fn player_look(
     motion: Res<Events<MouseMotion>>,
     mut query: Query<&mut Transform, With<PlayerCamera>>,
 ) {
-    if let Ok(window) = primary_window.get_single() {
-        for mut transform in query.iter_mut() {
-            for ev in state.reader_motion.iter(&motion) {
-                // let (mut yaw, mut pitch, _) = transform.rotation.to_euler(EulerRot::YXZ);
-                let (mut yaw, _, mut pitch) = transform.rotation.to_euler(EulerRot::ZYX);
-                match window.cursor.grab_mode {
-                    CursorGrabMode::None => (),
-                    _ => {
-                        // Using smallest of height or width ensures equal vertical and horizontal sensitivity
-                        let window_scale = window.height().min(window.width());
-                        pitch -= (settings.sensitivity * ev.delta.y * window_scale).to_radians();
-                        yaw -= (settings.sensitivity * ev.delta.x * window_scale).to_radians();
-                    }
+    let window = primary_window.single();
+    for mut transform in query.iter_mut() {
+        for ev in state.reader_motion.iter(&motion) {
+            // let (mut yaw, mut pitch, _) = transform.rotation.to_euler(EulerRot::YXZ);
+            let (mut yaw, _, mut pitch) = transform.rotation.to_euler(EulerRot::ZYX);
+            match window.cursor.grab_mode {
+                CursorGrabMode::None => (),
+                _ => {
+                    // Using smallest of height or width ensures equal vertical and horizontal sensitivity
+                    let window_scale = window.height().min(window.width());
+                    pitch -= (settings.sensitivity * ev.delta.y * window_scale).to_radians();
+                    yaw -= (settings.sensitivity * ev.delta.x * window_scale).to_radians();
                 }
-
-                // pitch = pitch.clamp(-1.54, 1.54);
-                pitch = pitch.clamp(0.02 * PI, 0.98 * PI);
-
-                // Order is important to prevent unintended roll
-                transform.rotation =
-                    // Quat::from_axis_angle(Vec3::Y, yaw) * Quat::from_axis_angle(Vec3::X, pitch);
-                    Quat::from_axis_angle(Vec3::Z, yaw) * Quat::from_axis_angle(Vec3::X, pitch);
             }
+
+            pitch = pitch.clamp(0.02 * PI, 0.98 * PI);
+
+            // Order is important to prevent unintended roll
+            transform.rotation =
+                Quat::from_axis_angle(Vec3::Z, yaw) * Quat::from_axis_angle(Vec3::X, pitch);
         }
-    } else {
-        warn!("Primary window not found for `player_look`!");
     }
 }
 
@@ -157,12 +143,9 @@ fn cursor_grab(
     key_bindings: Res<KeyBindings>,
     mut primary_window: Query<&mut Window, With<PrimaryWindow>>,
 ) {
-    if let Ok(mut window) = primary_window.get_single_mut() {
-        if keys.just_pressed(key_bindings.toggle_grab_cursor) {
-            toggle_grab_cursor(&mut window);
-        }
-    } else {
-        warn!("Primary window not found for `cursor_grab`!");
+    let mut window = primary_window.single_mut();
+    if keys.just_pressed(key_bindings.toggle_grab_cursor) {
+        toggle_grab_cursor(&mut window);
     }
 }
 
