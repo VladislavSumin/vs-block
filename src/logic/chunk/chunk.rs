@@ -41,6 +41,10 @@ impl Chunk {
             blocks,
         }
     }
+
+    pub fn get_entity(&self) -> Entity {
+        self.entity
+    }
 }
 
 impl Index<&ChunkBlockCoord> for Chunk {

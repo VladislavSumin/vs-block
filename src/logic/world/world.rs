@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use bevy::log::info;
 use bevy::prelude::{Entity, Resource};
+use bevy::utils::HashSet;
 use crate::logic::chunk::Chunk;
 use crate::logic::world::ChunkCoord;
 
@@ -18,8 +19,8 @@ impl World {
     }
 
     /// Возвращает список загруженных чанков
-    pub fn get_chunks(&self) -> &HashMap<ChunkCoord, Chunk> {
-        &self.chunks
+    pub fn get_chunk_keys(&self) -> HashSet<ChunkCoord> {
+        self.chunks.iter().map(|(k, _)| { *k }).collect()
     }
 
 
@@ -30,5 +31,9 @@ impl World {
             let chunk = Chunk::new(entity_factory(), 32);
             self.chunks.insert(coord, chunk);
         }
+    }
+
+    pub fn unload_chunk_if_exists(&mut self, coord: &ChunkCoord) -> Option<Entity> {
+        self.chunks.remove(&coord).map(|chunk| { chunk.get_entity() })
     }
 }
