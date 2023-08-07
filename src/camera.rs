@@ -1,6 +1,7 @@
 use std::f32::consts::PI;
 use bevy::ecs::event::ManualEventReader;
 use bevy::input::mouse::MouseMotion;
+use bevy::math::vec3;
 use bevy::prelude::*;
 use bevy::prelude::KeyCode::P;
 use bevy::window::{CursorGrabMode, PrimaryWindow};
@@ -52,8 +53,8 @@ fn setup_player_camera(mut commands: Commands) {
     // camera
     commands.spawn((
         Camera3dBundle {
-            transform: Transform::from_xyz(-2.0, 2.5, 5.0).looking_at(Vec3::ZERO, Vec3::Y),
-            // transform: Transform::from_xyz(-2.0, 2.5, 5.0).looking_at(Vec3::ZERO, Vec3::Z),
+            transform: Transform::from_xyz(0., 0., 32.0)
+                .looking_at(vec3(14., 14., 0.), Vec3::Z),
             ..default()
         },
         PlayerCamera,
@@ -143,8 +144,7 @@ fn player_look(
                 // Order is important to prevent unintended roll
                 transform.rotation =
                     // Quat::from_axis_angle(Vec3::Y, yaw) * Quat::from_axis_angle(Vec3::X, pitch);
-                Quat::from_axis_angle(Vec3::Z, yaw) * Quat::from_axis_angle(Vec3::X, pitch);
-
+                    Quat::from_axis_angle(Vec3::Z, yaw) * Quat::from_axis_angle(Vec3::X, pitch);
             }
         }
     } else {
