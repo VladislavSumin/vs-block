@@ -53,14 +53,18 @@ fn update_debug_info(
         .and_then(|fps| fps.average())
         .unwrap_or(0.) as u32;
 
-    let player_coord = player_query.single().translation;
+    let player_transition = player_query.single();
+    let player_coord = player_transition.translation;
+    let player_rot = player_transition.rotation;
 
     let text = &mut text_query.single_mut().sections[0].value;
     text.clear();
     write!(
         text,
-        "  FPS:{:3} x:{:.01} y:{:.01}, z:{:.01}",
-        fps, player_coord.x, player_coord.y, player_coord.z
+        "  FPS:{:3} pos-> x:{:.01} y:{:.01} z:{:.01} rot-> x:{:.01} y:{:.01}",
+        fps,
+        player_coord.x, player_coord.y, player_coord.z,
+        player_rot.x, player_rot.y,
     )
         .unwrap();
 }
