@@ -28,27 +28,21 @@ impl World {
     }
 
 
-    pub fn load_chunk_if_not_loaded<F>(&mut self, coord: ChunkCoord, entity_factory: F) -> Entity where
-        F: FnOnce() -> Entity {
-        if !self.chunks.contains_key(&coord) {
-            info!("Loading chunk at {:?}", coord);
-            let entity = entity_factory();
-            let chunk = gen_chunk(entity, 32);
-            self.chunks.insert(coord, chunk);
-            entity
-        } else {
-            *self.chunks.get(&coord).unwrap().get_metadata()
-        }
+    pub fn load_chunk(&mut self, coord: ChunkCoord) {
+        assert!(!self.chunks.contains_key(&coord));
+        info!("Loading chunk at {:?}", coord);
+        let chunk = gen_chunk(32);
+        self.chunks.insert(coord, chunk);
     }
 
-    pub fn unload_chunk_if_exists(&mut self, coord: &ChunkCoord) -> Option<Entity> {
-        self.chunks.remove(&coord).map(|chunk| { *chunk.get_metadata() })
+    pub fn unload_chunk_if_exists(&mut self, coord: &ChunkCoord) -> Option<Chunk> {
+        self.chunks.remove(&coord)
     }
 }
 
-fn gen_chunk(entity: Entity, seed: i32) -> Chunk {
+fn gen_chunk(seed: i32) -> Chunk {
     let mut rand = StdRng::seed_from_u64(seed as u64);
-    let mut chunk = Chunk::new(entity);
+    let mut chunk = Chunk::new(());
 
     for x in 0..CHUNK_SIZE_USIZE {
         for y in 0..CHUNK_SIZE_USIZE {
