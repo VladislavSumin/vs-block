@@ -4,6 +4,7 @@ use bevy::prelude::{Entity, Resource};
 use bevy::utils::HashSet;
 use rand::prelude::StdRng;
 use rand::{Rng, SeedableRng};
+use chunk::ChunkBlockPos;
 use crate::logic::block::{Block, BlockType};
 use crate::logic::chunk::{Chunk, CHUNK_SIZE_USIZE};
 use crate::logic::world::ChunkCoord;
@@ -47,22 +48,22 @@ impl World {
 
 fn gen_chunk(entity: Entity, seed: i32) -> Chunk {
     let mut rand = StdRng::seed_from_u64(seed as u64);
-    let mut blocks: [[[Option<Block>; CHUNK_SIZE_USIZE]; CHUNK_SIZE_USIZE]; CHUNK_SIZE_USIZE] = Default::default();
+    let mut chunk = Chunk::new(entity);
 
     for x in 0..CHUNK_SIZE_USIZE {
         for y in 0..CHUNK_SIZE_USIZE {
             for z in 0..CHUNK_SIZE_USIZE {
+                let pos = ChunkBlockPos::new(x as u8, y as u8, z as u8);
                 if z == 0 {
-                    blocks[x][y][z] = Some(Block::new(BlockType::BEDROCK));
+                    chunk[&pos] = Some(Block::new(BlockType::BEDROCK));
                     continue;
                 }
                 let gen_block = rand.gen_bool(0.2);
                 if gen_block {
-                    blocks[x][y][z] = Some(Block::new(BlockType::GRASS));
+                    chunk[&pos] = Some(Block::new(BlockType::GRASS));
                 }
             }
         }
     }
-
-    Chunk::new(blocks, entity)
+    chunk
 }

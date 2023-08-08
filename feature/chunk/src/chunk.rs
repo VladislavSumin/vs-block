@@ -1,4 +1,4 @@
-use std::ops::Index;
+use std::ops::{Index, IndexMut};
 use generic_assert::{Assert, IsTrue};
 use crate::chunk_block_pos::ChunkBlockPos;
 
@@ -19,10 +19,10 @@ pub struct Chunk<const CHUNK_SIZE: usize, BLOCK, METADATA>
 
 impl<const CHUNK_SIZE: usize, BLOCK, METADATA> Chunk<CHUNK_SIZE, BLOCK, METADATA>
     where Assert<{ CHUNK_SIZE < u8::MAX as usize }>: IsTrue {
-    pub fn new(blocks: Array3<Option<BLOCK>, CHUNK_SIZE>, metadata: METADATA) -> Self {
+    pub fn new(metadata: METADATA) -> Self {
         Self {
             metadata,
-            blocks,
+            blocks: std::array::from_fn(|_| std::array::from_fn(|_| std::array::from_fn(|_| None))),
         }
     }
 
@@ -37,5 +37,12 @@ impl<const CHUNK_SIZE: usize, BLOCK, METADATA> Index<&ChunkBlockPos> for Chunk<C
 
     fn index(&self, index: &ChunkBlockPos) -> &Self::Output {
         &self.blocks[index.x as usize][index.y as usize][index.z as usize]
+    }
+}
+
+impl<const CHUNK_SIZE: usize, BLOCK, METADATA> IndexMut<&ChunkBlockPos> for Chunk<CHUNK_SIZE, BLOCK, METADATA>
+    where Assert<{ CHUNK_SIZE < u8::MAX as usize }>: IsTrue {
+    fn index_mut(&mut self, index: &ChunkBlockPos) -> &mut Self::Output {
+        &mut self.blocks[index.x as usize][index.y as usize][index.z as usize]
     }
 }
