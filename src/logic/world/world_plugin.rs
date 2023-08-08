@@ -25,7 +25,7 @@ pub enum ChunkUpdateEvent {
 fn load_chunks(
     mut commands: Commands,
     mut world: ResMut<World>,
-    mut chunk_event_writter: EventWriter<ChunkUpdateEvent>,
+    mut chunk_event_writer: EventWriter<ChunkUpdateEvent>,
     world_anchors: Query<(&Transform, &WorldAnchor), With<WorldAnchor>>,
 ) {
     // TODO пока у нас один WorldAnchor, поэтому пока пишем алгоритм для работы с одним,
@@ -57,11 +57,11 @@ fn load_chunks(
         }
     }
 
-    // Удалем старые чанки
+    // Удаляем старые чанки
     for chunk_coord in chunks_to_unload.iter() {
         let entity = world.unload_chunk_if_exists(chunk_coord).unwrap();
         commands.entity(entity).despawn();
-        chunk_event_writter.send(ChunkUpdateEvent::Unloaded)
+        chunk_event_writer.send(ChunkUpdateEvent::Unloaded)
     }
 
     // Загружаем новые чанки
@@ -70,6 +70,6 @@ fn load_chunks(
             commands.spawn_empty().id()
         };
         let entity = world.load_chunk_if_not_loaded(chunk_coord, entity_factory);
-        chunk_event_writter.send(ChunkUpdateEvent::Loaded(entity, chunk_coord))
+        chunk_event_writer.send(ChunkUpdateEvent::Loaded(entity, chunk_coord))
     }
 }
