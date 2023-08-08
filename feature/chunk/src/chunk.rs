@@ -1,5 +1,4 @@
 use std::ops::Index;
-use bevy::utils::tracing::metadata;
 use crate::chunk_block_pos::ChunkBlockPos;
 
 type Array3<BLOCK, const SIZE: usize> = [[[BLOCK; SIZE]; SIZE]; SIZE];
