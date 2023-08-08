@@ -1156,6 +1156,13 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fd16c4719339c4530435d38e511904438d07cce7950afa3718a84ac36c10e89e"
 
 [[package]]
+name = "chunk"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+]
+
+[[package]]
 name = "clang-sys"
 version = "1.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3178,6 +3185,7 @@ name = "vs-block"
 version = "0.1.0"
 dependencies = [
  "bevy",
+ "chunk",
  "rand",
 ]
 

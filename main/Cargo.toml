@@ -4,6 +4,8 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+chunk = { path = "../feature/chunk" }
+
 # Основной графический движок
 bevy = { version = "0.11" }
 
