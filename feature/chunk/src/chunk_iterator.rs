@@ -1,7 +1,9 @@
+use generic_assert::{Assert, IsTrue};
 use crate::Chunk;
 use crate::chunk_block_pos::ChunkBlockPos;
 
-impl<'a, const CHUNK_SIZE: usize, BLOCK, METADATA> IntoIterator for &'a Chunk<CHUNK_SIZE, BLOCK, METADATA> {
+impl<'a, const CHUNK_SIZE: usize, BLOCK, METADATA> IntoIterator for &'a Chunk<CHUNK_SIZE, BLOCK, METADATA>
+    where Assert<{ CHUNK_SIZE < u8::MAX as usize }>: IsTrue {
     type Item = (ChunkBlockPos, &'a Option<BLOCK>);
     type IntoIter = ChunkIter<'a, CHUNK_SIZE, BLOCK, METADATA>;
 
@@ -15,14 +17,16 @@ impl<'a, const CHUNK_SIZE: usize, BLOCK, METADATA> IntoIterator for &'a Chunk<CH
     }
 }
 
-pub struct ChunkIter<'a, const CHUNK_SIZE: usize, BLOCK, METADATA> {
+pub struct ChunkIter<'a, const CHUNK_SIZE: usize, BLOCK, METADATA>
+    where Assert<{ CHUNK_SIZE < u8::MAX as usize }>: IsTrue {
     chunk: &'a Chunk<CHUNK_SIZE, BLOCK, METADATA>,
     x: u8,
     y: u8,
     z: u8,
 }
 
-impl<'a, const CHUNK_SIZE: usize, BLOCK, METADATA> Iterator for ChunkIter<'a, CHUNK_SIZE, BLOCK, METADATA> {
+impl<'a, const CHUNK_SIZE: usize, BLOCK, METADATA> Iterator for ChunkIter<'a, CHUNK_SIZE, BLOCK, METADATA>
+    where Assert<{ CHUNK_SIZE < u8::MAX as usize }>: IsTrue {
     type Item = (ChunkBlockPos, &'a Option<BLOCK>);
 
     fn next(&mut self) -> Option<Self::Item> {

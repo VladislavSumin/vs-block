@@ -1,3 +1,4 @@
+#![feature(generic_const_exprs)]
 mod camera;
 mod key_binding;
 mod render;

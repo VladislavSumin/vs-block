@@ -1,6 +1,7 @@
 [workspace]
 members = [
     "feature/chunk",
+    "feature/generic-assert",
     "main",
 ]
 

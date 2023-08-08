@@ -1160,6 +1160,7 @@ name = "chunk"
 version = "0.1.0"
 dependencies = [
  "bevy_math",
+ "generic-assert",
 ]
 
 [[package]]
@@ -1563,6 +1564,10 @@ dependencies = [
  "pin-project-lite",
  "waker-fn",
 ]
+
+[[package]]
+name = "generic-assert"
+version = "0.1.0"
 
 [[package]]
 name = "getrandom"

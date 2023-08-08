@@ -1,3 +1,5 @@
+#![feature(generic_const_exprs)]
+
 mod chunk;
 mod chunk_iterator;
 mod chunk_block_pos;

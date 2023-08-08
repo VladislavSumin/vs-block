@@ -1,4 +1,5 @@
 use std::ops::Index;
+use generic_assert::{Assert, IsTrue};
 use crate::chunk_block_pos::ChunkBlockPos;
 
 type Array3<BLOCK, const SIZE: usize> = [[[BLOCK; SIZE]; SIZE]; SIZE];
@@ -10,12 +11,14 @@ type Array3<BLOCK, const SIZE: usize> = [[[BLOCK; SIZE]; SIZE]; SIZE];
 /// [BLOCK] - тип блоков в чанке.
 ///
 /// [METADATA] - любые дополнительные данные
-pub struct Chunk<const CHUNK_SIZE: usize, BLOCK, METADATA> {
+pub struct Chunk<const CHUNK_SIZE: usize, BLOCK, METADATA>
+    where Assert<{ CHUNK_SIZE < u8::MAX as usize }>: IsTrue {
     metadata: METADATA,
     blocks: Array3<Option<BLOCK>, CHUNK_SIZE>,
 }
 
-impl<const CHUNK_SIZE: usize, BLOCK, METADATA> Chunk<CHUNK_SIZE, BLOCK, METADATA> {
+impl<const CHUNK_SIZE: usize, BLOCK, METADATA> Chunk<CHUNK_SIZE, BLOCK, METADATA>
+    where Assert<{ CHUNK_SIZE < u8::MAX as usize }>: IsTrue {
     pub fn new(blocks: Array3<Option<BLOCK>, CHUNK_SIZE>, metadata: METADATA) -> Self {
         Self {
             metadata,
@@ -28,7 +31,8 @@ impl<const CHUNK_SIZE: usize, BLOCK, METADATA> Chunk<CHUNK_SIZE, BLOCK, METADATA
     }
 }
 
-impl<const CHUNK_SIZE: usize, BLOCK, METADATA> Index<&ChunkBlockPos> for Chunk<CHUNK_SIZE, BLOCK, METADATA> {
+impl<const CHUNK_SIZE: usize, BLOCK, METADATA> Index<&ChunkBlockPos> for Chunk<CHUNK_SIZE, BLOCK, METADATA>
+    where Assert<{ CHUNK_SIZE < u8::MAX as usize }>: IsTrue {
     type Output = Option<BLOCK>;
 
     fn index(&self, index: &ChunkBlockPos) -> &Self::Output {
