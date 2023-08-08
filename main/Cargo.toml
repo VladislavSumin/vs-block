@@ -1,0 +1,11 @@
+[package]
+name = "vs-block"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+# Основной графический движок
+bevy = { version = "0.11" }
+
+# Генерация случайных чисел
+rand = "0.8.5"
