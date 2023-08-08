@@ -64,15 +64,21 @@ fn load_chunks(
     }
 
     // Удаляем старые чанки
-    for chunk_coord in chunks_to_unload.iter() {
-        world.remove_chunk(chunk_coord);
-        let (entity, _) = chunks_query.iter().find(|(_, pos)| pos.pos == *chunk_coord).unwrap();
+    for chunk_coord in chunks_to_unload {
+        world.remove_chunk(&chunk_coord);
+        let (entity, _) = chunks_query.iter().find(|(_, pos)| pos.pos == chunk_coord).unwrap();
         commands.entity(entity).despawn();
         chunk_event_writer.send(ChunkUpdateEvent::Unloaded)
     }
 
     // Загружаем новые чанки
+    let mut load_count = 0;
     for chunk_coord in chunks_to_load {
+
+        // TODO временное решение, запрещаем загружать больше 3ех чанков за фрейм
+        if load_count > 3 { break; }
+        load_count += 1;
+
         let entity = commands.spawn(ChunkEntity { pos: chunk_coord }).id();
         world.add_chunk(chunk_coord);
         chunk_event_writer.send(ChunkUpdateEvent::Loaded(entity, chunk_coord))
