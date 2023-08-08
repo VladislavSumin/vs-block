@@ -9,19 +9,23 @@ impl Plugin for WorldPlugin {
     fn build(&self, app: &mut App) {
         app
             .init_resource::<World>()
+            .add_event::<ChunkUpdateEvent>()
             .add_systems(Update, load_chunks)
         ;
     }
 }
 
-/// Маркер, что [Entity] является чанком
-#[derive(Component)]
-pub struct ChunkEntity;
+#[derive(Event)]
+pub enum ChunkUpdateEvent {
+    Loaded(Entity, ChunkCoord),
+    Unloaded,
+}
 
 /// Загружает чанки в память
 fn load_chunks(
     mut commands: Commands,
     mut world: ResMut<World>,
+    mut chunk_event_writter: EventWriter<ChunkUpdateEvent>,
     world_anchors: Query<(&Transform, &WorldAnchor), With<WorldAnchor>>,
 ) {
     // TODO пока у нас один WorldAnchor, поэтому пока пишем алгоритм для работы с одним,
@@ -57,18 +61,15 @@ fn load_chunks(
     for chunk_coord in chunks_to_unload.iter() {
         let entity = world.unload_chunk_if_exists(chunk_coord).unwrap();
         commands.entity(entity).despawn();
+        chunk_event_writter.send(ChunkUpdateEvent::Unloaded)
     }
-
 
     // Загружаем новые чанки
     for chunk_coord in chunks_to_load {
         let entity_factory = || {
-            commands.spawn((
-                ChunkEntity,
-                chunk_coord
-            ))
-                .id()
+            commands.spawn_empty().id()
         };
-        world.load_chunk_if_not_loaded(chunk_coord, entity_factory);
+        let entity = world.load_chunk_if_not_loaded(chunk_coord, entity_factory);
+        chunk_event_writter.send(ChunkUpdateEvent::Loaded(entity, chunk_coord))
     }
 }

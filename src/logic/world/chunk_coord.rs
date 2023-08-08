@@ -4,7 +4,7 @@ use crate::logic::chunk::CHUNK_SIZE;
 
 /// Координаты чанка в сетке чанков.
 /// **Note** Например, второй чанк по оси Х, будет иметь координату X = 1, а не 16!
-#[derive(Default, Hash, Eq, PartialEq, Clone, Copy, Debug, Component)]
+#[derive(Default, Hash, Eq, PartialEq, Clone, Copy, Debug)]
 pub struct ChunkCoord {
     coord: IVec3,
 }

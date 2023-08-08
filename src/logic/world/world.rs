@@ -24,12 +24,16 @@ impl World {
     }
 
 
-    pub fn load_chunk_if_not_loaded<F>(&mut self, coord: ChunkCoord, entity_factory: F) where
+    pub fn load_chunk_if_not_loaded<F>(&mut self, coord: ChunkCoord, entity_factory: F) -> Entity where
         F: FnOnce() -> Entity {
         if !self.chunks.contains_key(&coord) {
             info!("Loading chunk at {:?}", coord);
-            let chunk = Chunk::new(entity_factory(), 32);
+            let entity = entity_factory();
+            let chunk = Chunk::new(entity, 32);
             self.chunks.insert(coord, chunk);
+            entity
+        } else {
+            self.chunks.get(&coord).unwrap().get_entity()
         }
     }
 
