@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use bevy::log::info;
-use bevy::prelude::{Entity, Resource};
+use bevy::prelude::Resource;
 use bevy::utils::HashSet;
 use rand::prelude::StdRng;
 use rand::{Rng, SeedableRng};
@@ -17,6 +17,11 @@ pub struct World {
 }
 
 impl World {
+    /// Возвращает загружен ли чанк по переданной позиции
+    pub fn is_chunk_loaded(&self, pos: &ChunkCoord) -> bool {
+        self.chunks.contains_key(pos)
+    }
+
     /// Возвращает ссылку на чанк по [ChunkCoord] если такой чанк загружен в память
     pub fn get_chunk(&self, coord: &ChunkCoord) -> Option<&Chunk> {
         self.chunks.get(coord)
@@ -27,16 +32,17 @@ impl World {
         self.chunks.iter().map(|(k, _)| { *k }).collect()
     }
 
-
-    pub fn load_chunk(&mut self, coord: ChunkCoord) {
+    /// Добавляет новый чанк, если чанк по этим координатам уже загружен паникует
+    pub fn add_chunk(&mut self, coord: ChunkCoord) {
         assert!(!self.chunks.contains_key(&coord));
         info!("Loading chunk at {:?}", coord);
         let chunk = gen_chunk(32);
         self.chunks.insert(coord, chunk);
     }
 
-    pub fn unload_chunk_if_exists(&mut self, coord: &ChunkCoord) -> Option<Chunk> {
-        self.chunks.remove(&coord)
+    /// Удаляет чанк, если чанк по этим координатам уже удален паникует
+    pub fn remove_chunk(&mut self, coord: &ChunkCoord) {
+        self.chunks.remove(&coord).unwrap();
     }
 }
 

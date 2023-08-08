@@ -31,18 +31,16 @@ fn load_chunks(
     mut commands: Commands,
     mut world: ResMut<World>,
     mut chunk_event_writer: EventWriter<ChunkUpdateEvent>,
-    mut chunks_query: Query<(Entity, &ChunkEntity)>,
+    chunks_query: Query<(Entity, &ChunkEntity)>,
     world_anchors: Query<(&Transform, &WorldAnchor), With<WorldAnchor>>,
 ) {
-    // TODO пока у нас один WorldAnchor, поэтому пока пишем алгоритм для работы с одним,
-    // в будущем можно будет добавить поддержку работы с несколькими якорями
-
     // Список чанков которые нужно удалить
-    let chunks_to_unload = &mut world.get_chunk_keys().clone();
+    let mut chunks_to_unload = world.get_chunk_keys();
 
     // Список чанков которые нужно загрузить
     let mut chunks_to_load = HashSet::<ChunkCoord>::new();
 
+    // Итерируемся по всем WorldAnchor
     for (transform, world_anchor) in world_anchors.iter() {
         let load_radius = world_anchor.load_radius as i32;
 
@@ -57,7 +55,9 @@ fn load_chunks(
                 // Удаляем чанк находящийся внутри радиуса из списка чанков на удаление
                 if !chunks_to_unload.remove(&pos) {
                     // Если такого чанка вообще не было среди загруженных, добавляем его в очередь на загрузку
-                    chunks_to_load.insert(pos);
+                    if !world.is_chunk_loaded(&pos) {
+                        chunks_to_load.insert(pos);
+                    }
                 }
             }
         }
@@ -65,7 +65,7 @@ fn load_chunks(
 
     // Удаляем старые чанки
     for chunk_coord in chunks_to_unload.iter() {
-        world.unload_chunk_if_exists(chunk_coord).unwrap();
+        world.remove_chunk(chunk_coord);
         let (entity, _) = chunks_query.iter().find(|(_, pos)| pos.pos == *chunk_coord).unwrap();
         commands.entity(entity).despawn();
         chunk_event_writer.send(ChunkUpdateEvent::Unloaded)
@@ -74,7 +74,7 @@ fn load_chunks(
     // Загружаем новые чанки
     for chunk_coord in chunks_to_load {
         let entity = commands.spawn(ChunkEntity { pos: chunk_coord }).id();
-        world.load_chunk(chunk_coord);
+        world.add_chunk(chunk_coord);
         chunk_event_writer.send(ChunkUpdateEvent::Loaded(entity, chunk_coord))
     }
 }
