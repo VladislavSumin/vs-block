@@ -28,6 +28,10 @@ impl ChunkCoord {
     pub fn get_absolute_coord(&self) -> Vec3 {
         (self.coord * CHUNK_SIZE as i32).as_vec3()
     }
+
+    pub fn raw_pos(&self) -> &IVec3 {
+        &self.coord
+    }
 }
 
 #[cfg(test)]
