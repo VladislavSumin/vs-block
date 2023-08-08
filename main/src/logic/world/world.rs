@@ -35,7 +35,6 @@ impl World {
     /// Добавляет новый чанк, если чанк по этим координатам уже загружен паникует
     pub fn add_chunk(&mut self, coord: ChunkCoord) {
         assert!(!self.chunks.contains_key(&coord));
-        info!("Loading chunk at {:?}", coord);
         let chunk = gen_chunk(32);
         self.chunks.insert(coord, chunk);
     }
