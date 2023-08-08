@@ -12,13 +12,13 @@ type Array3<BLOCK, const SIZE: usize> = [[[BLOCK; SIZE]; SIZE]; SIZE];
 ///
 /// [METADATA] - любые дополнительные данные
 pub struct Chunk<const CHUNK_SIZE: usize, BLOCK, METADATA>
-    where Assert<{ CHUNK_SIZE < u8::MAX as usize }>: IsTrue {
+    where Assert<{ CHUNK_SIZE <= u8::MAX as usize }>: IsTrue {
     metadata: METADATA,
     blocks: Array3<Option<BLOCK>, CHUNK_SIZE>,
 }
 
 impl<const CHUNK_SIZE: usize, BLOCK, METADATA> Chunk<CHUNK_SIZE, BLOCK, METADATA>
-    where Assert<{ CHUNK_SIZE < u8::MAX as usize }>: IsTrue {
+    where Assert<{ CHUNK_SIZE <= u8::MAX as usize }>: IsTrue {
     pub fn new(metadata: METADATA) -> Self {
         Self {
             metadata,
@@ -31,18 +31,18 @@ impl<const CHUNK_SIZE: usize, BLOCK, METADATA> Chunk<CHUNK_SIZE, BLOCK, METADATA
     }
 }
 
-impl<const CHUNK_SIZE: usize, BLOCK, METADATA> Index<&ChunkBlockPos> for Chunk<CHUNK_SIZE, BLOCK, METADATA>
-    where Assert<{ CHUNK_SIZE < u8::MAX as usize }>: IsTrue {
+impl<const CHUNK_SIZE: usize, BLOCK, METADATA> Index<&ChunkBlockPos<CHUNK_SIZE>> for Chunk<CHUNK_SIZE, BLOCK, METADATA>
+    where Assert<{ CHUNK_SIZE <= u8::MAX as usize }>: IsTrue {
     type Output = Option<BLOCK>;
 
-    fn index(&self, index: &ChunkBlockPos) -> &Self::Output {
+    fn index(&self, index: &ChunkBlockPos<CHUNK_SIZE>) -> &Self::Output {
         &self.blocks[index.x as usize][index.y as usize][index.z as usize]
     }
 }
 
-impl<const CHUNK_SIZE: usize, BLOCK, METADATA> IndexMut<&ChunkBlockPos> for Chunk<CHUNK_SIZE, BLOCK, METADATA>
-    where Assert<{ CHUNK_SIZE < u8::MAX as usize }>: IsTrue {
-    fn index_mut(&mut self, index: &ChunkBlockPos) -> &mut Self::Output {
+impl<const CHUNK_SIZE: usize, BLOCK, METADATA> IndexMut<&ChunkBlockPos<CHUNK_SIZE>> for Chunk<CHUNK_SIZE, BLOCK, METADATA>
+    where Assert<{ CHUNK_SIZE <= u8::MAX as usize }>: IsTrue {
+    fn index_mut(&mut self, index: &ChunkBlockPos<CHUNK_SIZE>) -> &mut Self::Output {
         &mut self.blocks[index.x as usize][index.y as usize][index.z as usize]
     }
 }
