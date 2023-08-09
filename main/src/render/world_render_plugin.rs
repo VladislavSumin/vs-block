@@ -35,7 +35,9 @@ fn update_chunk_mesh(
 
             let material = StandardMaterial {
                 base_color_texture: Some(texture),
-                unlit: true,
+                unlit: false,
+                metallic: 0.,
+                reflectance:0.,
                 ..default()
             };
 
