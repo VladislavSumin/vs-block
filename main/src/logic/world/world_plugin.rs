@@ -1,7 +1,9 @@
+use bevy::math::ivec3;
 use bevy::prelude::*;
 use bevy::utils::HashSet;
+use crate::logic::chunk::ChunkPos;
 use crate::logic::world::world::World;
-use crate::logic::world::{ChunkCoord, WorldAnchor};
+use crate::logic::world::WorldAnchor;
 use crate::logic::world::world_anchor::WorldAnchorPos;
 
 pub struct WorldPlugin;
@@ -22,18 +24,18 @@ impl Plugin for WorldPlugin {
 
 #[derive(Component)]
 struct ChunkEntity {
-    pos: ChunkCoord,
+    pos: ChunkPos,
 }
 
 #[derive(Event)]
 pub enum ChunkUpdateEvent {
-    Loaded(Entity, ChunkCoord),
+    Loaded(Entity, ChunkPos),
     Unloaded,
 }
 
 #[derive(Resource, Default)]
 struct ChunkLoadingQueue {
-    pub positions: HashSet<ChunkCoord>,
+    pub positions: HashSet<ChunkPos>,
 }
 
 /// Для каждого [WorldAnchor] добавляем внутреннюю сущность [WorldAnchorPos], это нужно для повышения производительности
@@ -44,7 +46,7 @@ fn spawn_world_anchor_position(
 ) {
     for (entity, transform) in new_world_anchors.iter() {
         if let Some(mut entity_commands) = commands.get_entity(entity) {
-            let pos = ChunkCoord::from_global_coord(transform.translation);
+            let pos = ChunkPos::from_global_coord(transform.translation);
             entity_commands.insert(WorldAnchorPos { pos });
         }
     }
@@ -55,7 +57,7 @@ fn update_world_anchor_position(
     mut new_world_anchors: Query<(&mut WorldAnchorPos, &Transform), Changed<Transform>>,
 ) {
     for (mut pos, transform) in new_world_anchors.iter_mut() {
-        let new_pos = ChunkCoord::from_global_coord(transform.translation);
+        let new_pos = ChunkPos::from_global_coord(transform.translation);
 
         // Bevy считает изменился ли компонент не через eq, а по факту записи в переменную
         // поэтому что бы не тригерить обновление лишний раз записываем в переменную pos только если позиция
@@ -87,7 +89,7 @@ fn manage_chunk_loading_state(
     let mut chunks_to_unload = world.get_chunk_keys();
 
     // Список чанков которые нужно загрузить
-    let mut chunks_to_load = HashSet::<ChunkCoord>::new();
+    let mut chunks_to_load = HashSet::<ChunkPos>::new();
 
     // Итерируемся по всем WorldAnchor
     for (pos, world_anchor) in world_anchors_pos.iter() {
@@ -99,7 +101,7 @@ fn manage_chunk_loading_state(
 
         for x in anchor_chunk_coord.raw_pos().x - load_radius..anchor_chunk_coord.raw_pos().x + load_radius {
             for y in anchor_chunk_coord.raw_pos().y - load_radius..anchor_chunk_coord.raw_pos().y + load_radius {
-                let pos = ChunkCoord::new(x, y, 0);
+                let pos = ivec3(x, y, 0).into();
                 // Удаляем чанк находящийся внутри радиуса из списка чанков на удаление
                 if !chunks_to_unload.remove(&pos) {
                     // Если такого чанка вообще не было среди загруженных, добавляем его в очередь на загрузку
@@ -130,7 +132,7 @@ fn load_new_chunks_from_queue(
     mut chunk_event_writer: EventWriter<ChunkUpdateEvent>,
     mut chunk_loading_queue: ResMut<ChunkLoadingQueue>,
 ) {
-    let mut generated_chunks: HashSet<ChunkCoord> = HashSet::new();
+    let mut generated_chunks: HashSet<ChunkPos> = HashSet::new();
     for pos in chunk_loading_queue.positions.iter().take(100) {
         let entity = commands.spawn(ChunkEntity { pos: *pos }).id();
         world.add_chunk(*pos);

@@ -1,5 +1,5 @@
 use bevy::prelude::Component;
-use crate::logic::world::ChunkCoord;
+use crate::logic::chunk::ChunkPos;
 
 /// Маркерный интерфейс, для маркировки сущностей вокруг которых должен грузиться мир
 /// Такие сущности обязательно должны так же включать элемент [Transform]
@@ -19,5 +19,5 @@ impl Default for WorldAnchor {
 
 #[derive(Component)]
 pub struct WorldAnchorPos {
-    pub pos: ChunkCoord,
+    pub pos: ChunkPos,
 }

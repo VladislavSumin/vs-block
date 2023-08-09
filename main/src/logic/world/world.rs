@@ -6,41 +6,40 @@ use rand::prelude::StdRng;
 use rand::{Rng, SeedableRng};
 use chunk::ChunkBlockPos;
 use crate::logic::block::{Block, BlockType};
-use crate::logic::chunk::{Chunk, CHUNK_SIZE_USIZE};
-use crate::logic::world::ChunkCoord;
+use crate::logic::chunk::{Chunk, CHUNK_SIZE_USIZE, ChunkPos};
 
 /// Структура мира
 #[derive(Resource, Default)]
 pub struct World {
     /// Список загруженных чанков
-    chunks: HashMap<ChunkCoord, Chunk>,
+    chunks: HashMap<ChunkPos, Chunk>,
 }
 
 impl World {
     /// Возвращает загружен ли чанк по переданной позиции
-    pub fn is_chunk_loaded(&self, pos: &ChunkCoord) -> bool {
+    pub fn is_chunk_loaded(&self, pos: &ChunkPos) -> bool {
         self.chunks.contains_key(pos)
     }
 
     /// Возвращает ссылку на чанк по [ChunkCoord] если такой чанк загружен в память
-    pub fn get_chunk(&self, coord: &ChunkCoord) -> Option<&Chunk> {
+    pub fn get_chunk(&self, coord: &ChunkPos) -> Option<&Chunk> {
         self.chunks.get(coord)
     }
 
     /// Возвращает список загруженных чанков
-    pub fn get_chunk_keys(&self) -> HashSet<ChunkCoord> {
+    pub fn get_chunk_keys(&self) -> HashSet<ChunkPos> {
         self.chunks.iter().map(|(k, _)| { *k }).collect()
     }
 
     /// Добавляет новый чанк, если чанк по этим координатам уже загружен паникует
-    pub fn add_chunk(&mut self, coord: ChunkCoord) {
+    pub fn add_chunk(&mut self, coord: ChunkPos) {
         assert!(!self.chunks.contains_key(&coord));
         let chunk = gen_chunk(32);
         self.chunks.insert(coord, chunk);
     }
 
     /// Удаляет чанк, если чанк по этим координатам уже удален паникует
-    pub fn remove_chunk(&mut self, coord: &ChunkCoord) {
+    pub fn remove_chunk(&mut self, coord: &ChunkPos) {
         self.chunks.remove(&coord).unwrap();
     }
 }
