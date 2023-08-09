@@ -2,6 +2,7 @@ use bevy::app::{App, Plugin, Update};
 use bevy::asset::Assets;
 use bevy::pbr::{PbrBundle, StandardMaterial};
 use bevy::prelude::*;
+use strum::IntoEnumIterator;
 use crate::logic::chunk::{Chunk, ChunkBlockPos};
 use crate::render::{AbsoluteBlockFaceDirection, MeshBuilder};
 use crate::logic::world::{ChunkUpdateEvent, World};
@@ -60,13 +61,23 @@ fn create_chunk_mesh(chunk: &Chunk) -> Mesh {
     for (block_coord, block) in chunk.into_iter() {
         if let Some(_) = block {
             builder.set_transition(block_coord.into());
-            builder.add_mesh_data(AbsoluteBlockFaceDirection::PosX);
-            builder.add_mesh_data(AbsoluteBlockFaceDirection::NegX);
-            builder.add_mesh_data(AbsoluteBlockFaceDirection::PosY);
-            builder.add_mesh_data(AbsoluteBlockFaceDirection::NegY);
-            builder.add_mesh_data(AbsoluteBlockFaceDirection::PosZ);
-            builder.add_mesh_data(AbsoluteBlockFaceDirection::NegZ);
+
+            for dir in AbsoluteBlockFaceDirection::iter() {
+                if !has_neighbor_block(chunk, block_coord, dir) {
+                    builder.add_mesh_data(dir);
+                }
+            }
         }
     }
     builder.build()
+}
+
+fn has_neighbor_block(chunk: &Chunk, pos: ChunkBlockPos, dir: AbsoluteBlockFaceDirection) -> bool {
+    let dir_pos: IVec3 = dir.into();
+    let neighbor_pos: Result<ChunkBlockPos, ()> = (pos.as_ivec3() + dir_pos).try_into();
+    if let Ok(pos) = neighbor_pos {
+        chunk[&pos].is_some()
+    } else {
+        false
+    }
 }

@@ -1,6 +1,9 @@
+use bevy::math::{IVec3, ivec3};
+use strum_macros::EnumIter;
 use crate::render::MeshPart;
 
 /// Направление стороны блока в абсолютных координатах
+#[derive(EnumIter, Clone, Copy)]
 pub enum AbsoluteBlockFaceDirection {
     /// Позитивное направление оси X, или правая сторона
     PosX,
@@ -19,6 +22,19 @@ pub enum AbsoluteBlockFaceDirection {
 
     /// Негативное направление оси Z, или задняя сторона
     NegZ,
+}
+
+impl Into<IVec3> for AbsoluteBlockFaceDirection {
+    fn into(self) -> IVec3 {
+        match self {
+            AbsoluteBlockFaceDirection::PosX => { ivec3(1, 0, 0) }
+            AbsoluteBlockFaceDirection::NegX => { ivec3(-1, 0, 0) }
+            AbsoluteBlockFaceDirection::PosY => { ivec3(0, 1, 0) }
+            AbsoluteBlockFaceDirection::NegY => { ivec3(0, -1, 0) }
+            AbsoluteBlockFaceDirection::PosZ => { ivec3(0, 0, 1) }
+            AbsoluteBlockFaceDirection::NegZ => { ivec3(0, 0, -1) }
+        }
+    }
 }
 
 impl AbsoluteBlockFaceDirection {
