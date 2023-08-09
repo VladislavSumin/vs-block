@@ -2,8 +2,8 @@ use bevy::app::{App, Plugin, Update};
 use bevy::asset::Assets;
 use bevy::pbr::{PbrBundle, StandardMaterial};
 use bevy::prelude::*;
+use crate::logic::chunk::{Chunk, ChunkBlockPos};
 use crate::render::{AbsoluteBlockFaceDirection, MeshBuilder};
-use crate::logic::chunk::Chunk;
 use crate::logic::world::{ChunkUpdateEvent, World};
 
 /// Отвечает за генерацию [Mesh] для загруженных [Chunk], а так же за обновление [Mesh] при
@@ -37,7 +37,7 @@ fn update_chunk_mesh(
                 base_color_texture: Some(texture),
                 unlit: false,
                 metallic: 0.,
-                reflectance:0.,
+                reflectance: 0.,
                 ..default()
             };
 

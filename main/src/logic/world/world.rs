@@ -1,4 +1,5 @@
 use std::cmp::min;
+use bevy::math::uvec3;
 use bevy::prelude::Resource;
 use bevy::utils::HashSet;
 use noise::NoiseFn;
@@ -80,7 +81,7 @@ fn gen_chunk(seed: i32, pos: ChunkPos, noise: &Noise) -> Chunk {
             if h <= 0 { continue; }
 
             for z in 0..min(h as usize, CHUNK_SIZE_USIZE) {
-                let pos = ChunkBlockPos::new(x as u8, y as u8, z as u8);
+                let pos = uvec3(x as u32, y as u32, z as u32).try_into().unwrap();
                 chunk[&pos] = Some(Block::new(BlockType::GRASS));
             }
         }
