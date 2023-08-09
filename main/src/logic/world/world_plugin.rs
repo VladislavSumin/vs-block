@@ -1,10 +1,9 @@
 use bevy::math::ivec3;
 use bevy::prelude::*;
 use bevy::utils::HashSet;
+use world_anchor::{WorldAnchor, WorldAnchorInChunkPos};
 use crate::logic::chunk::ChunkPos;
 use crate::logic::world::world::World;
-use crate::logic::world::WorldAnchor;
-use crate::logic::world::world_anchor::WorldAnchorPos;
 
 pub struct WorldPlugin;
 
@@ -14,8 +13,6 @@ impl Plugin for WorldPlugin {
             .init_resource::<World>()
             .init_resource::<ChunkLoadingQueue>()
             .add_event::<ChunkUpdateEvent>()
-            .add_systems(Update, spawn_world_anchor_position)
-            .add_systems(Update, update_world_anchor_position)
             .add_systems(Update, manage_chunk_loading_state)
             .add_systems(Update, load_new_chunks_from_queue)
         ;
@@ -38,36 +35,6 @@ struct ChunkLoadingQueue {
     pub positions: HashSet<ChunkPos>,
 }
 
-/// Для каждого [WorldAnchor] добавляем внутреннюю сущность [WorldAnchorPos], это нужно для повышения производительности
-/// других функций которым нужна позиция [WorldAnchor] применимо к сетке координат чанков
-fn spawn_world_anchor_position(
-    mut commands: Commands,
-    new_world_anchors: Query<(Entity, &Transform), Added<WorldAnchor>>,
-) {
-    for (entity, transform) in new_world_anchors.iter() {
-        if let Some(mut entity_commands) = commands.get_entity(entity) {
-            let pos = ChunkPos::from_global_coord(transform.translation);
-            entity_commands.insert(WorldAnchorPos { pos });
-        }
-    }
-}
-
-/// Обновляем [ChunkCoord] при изменении [Transform]
-fn update_world_anchor_position(
-    mut new_world_anchors: Query<(&mut WorldAnchorPos, &Transform), Changed<Transform>>,
-) {
-    for (mut pos, transform) in new_world_anchors.iter_mut() {
-        let new_pos = ChunkPos::from_global_coord(transform.translation);
-
-        // Bevy считает изменился ли компонент не через eq, а по факту записи в переменную
-        // поэтому что бы не тригерить обновление лишний раз записываем в переменную pos только если позиция
-        // действительно изменилась.
-        if pos.pos != new_pos {
-            pos.pos = new_pos
-        }
-    }
-}
-
 /// Загружает управлаяет очередью загрузки чанков, а так же выгружает не нужные чанки из памяти
 fn manage_chunk_loading_state(
     mut commands: Commands,
@@ -75,9 +42,9 @@ fn manage_chunk_loading_state(
     mut chunk_loading_queue: ResMut<ChunkLoadingQueue>,
     mut chunk_event_writer: EventWriter<ChunkUpdateEvent>,
     chunks_query: Query<(Entity, &ChunkEntity)>,
-    changed_world_anchors_pos: Query<(), Changed<WorldAnchorPos>>,
+    changed_world_anchors_pos: Query<(), Changed<WorldAnchorInChunkPos<16>>>,
     changed_world_anchors_conf: Query<(), Changed<WorldAnchor>>,
-    world_anchors_pos: Query<(&WorldAnchorPos, &WorldAnchor)>,
+    world_anchors_pos: Query<(&WorldAnchorInChunkPos<16>, &WorldAnchor)>,
 ) {
     // Если позиции и параметры якорей не изменились то пересчитывать не нужно
     if changed_world_anchors_pos.is_empty() && changed_world_anchors_conf.is_empty() {

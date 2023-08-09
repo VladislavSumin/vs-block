@@ -4,8 +4,8 @@ use bevy::input::mouse::MouseMotion;
 use bevy::math::vec3;
 use bevy::prelude::*;
 use bevy::window::{CursorGrabMode, PrimaryWindow};
+use world_anchor::WorldAnchor;
 use crate::key_binding::KeyBindings;
-use crate::logic::world::WorldAnchor;
 
 pub struct CameraPlugin;
 

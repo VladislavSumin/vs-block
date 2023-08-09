@@ -3192,6 +3192,7 @@ dependencies = [
  "bevy",
  "chunk",
  "rand",
+ "world-anchor",
 ]
 
 [[package]]
@@ -3660,6 +3661,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "acaaa1190073b2b101e15083c38ee8ec891b5e05cbee516521e94ec008f61e64"
 dependencies = [
  "memchr",
+]
+
+[[package]]
+name = "world-anchor"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "chunk",
+ "generic-assert",
 ]
 
 [[package]]

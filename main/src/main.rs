@@ -1,4 +1,5 @@
 #![feature(generic_const_exprs)]
+
 mod camera;
 mod key_binding;
 mod render;
@@ -6,6 +7,7 @@ mod logic;
 
 use bevy::diagnostic::FrameTimeDiagnosticsPlugin;
 use bevy::prelude::*;
+use world_anchor::WorldAnchorPlugin;
 use crate::camera::CameraPlugin;
 use crate::key_binding::KeyBindingsPlugin;
 use crate::render::ChunkRenderPlugin;
@@ -18,6 +20,7 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_plugins(KeyBindingsPlugin)
         .add_plugins(CameraPlugin)
+        .add_plugins(WorldAnchorPlugin::<16>)
         .add_plugins(WorldPlugin)
         .add_plugins(ChunkRenderPlugin)
         .add_plugins(FrameTimeDiagnosticsPlugin)

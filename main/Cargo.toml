@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 chunk = { path = "../feature/chunk" }
+world-anchor = { path = "../feature/world-anchor" }
 
 bevy = { }
 rand = { }

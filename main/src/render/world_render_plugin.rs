@@ -23,16 +23,26 @@ fn update_chunk_mesh(
     mut chunk_event: EventReader<ChunkUpdateEvent>,
     world: Res<World>,
     mut assets: ResMut<Assets<Mesh>>,
+    asset_server: Res<AssetServer>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     for event in chunk_event.iter() {
         if let ChunkUpdateEvent::Loaded(entity, chunk_coord) = event {
             let chunk = world.get_chunk(chunk_coord).unwrap();
             let mesh = assets.add(create_chunk_mesh(chunk));
+
+            let texture: Handle<Image> = asset_server.load("dirt.png");
+
+            let material = StandardMaterial {
+                base_color_texture: Some(texture),
+                unlit: true,
+                ..default()
+            };
+
             commands.entity(*entity).insert(
                 PbrBundle {
                     mesh,
-                    material: materials.add(Color::rgb(0.8, 0.7, 0.6).into()),
+                    material: materials.add(material),
                     transform: Transform::from_translation(chunk_coord.get_absolute_coord()),
                     ..default()
                 }
