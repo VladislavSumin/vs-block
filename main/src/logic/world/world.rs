@@ -1,46 +1,44 @@
-use std::collections::HashMap;
-use bevy::log::info;
 use bevy::prelude::Resource;
 use bevy::utils::HashSet;
 use rand::prelude::StdRng;
 use rand::{Rng, SeedableRng};
 use chunk::ChunkBlockPos;
 use crate::logic::block::{Block, BlockType};
-use crate::logic::chunk::{Chunk, CHUNK_SIZE_USIZE, ChunkPos};
+use crate::logic::chunk::{Chunk, CHUNK_SIZE_USIZE, ChunkMap, ChunkPos};
 
 /// Структура мира
 #[derive(Resource, Default)]
 pub struct World {
     /// Список загруженных чанков
-    chunks: HashMap<ChunkPos, Chunk>,
+    chunk_map: ChunkMap,
 }
 
 impl World {
     /// Возвращает загружен ли чанк по переданной позиции
     pub fn is_chunk_loaded(&self, pos: &ChunkPos) -> bool {
-        self.chunks.contains_key(pos)
+        self.chunk_map.contains_key(pos)
     }
 
     /// Возвращает ссылку на чанк по [ChunkCoord] если такой чанк загружен в память
     pub fn get_chunk(&self, coord: &ChunkPos) -> Option<&Chunk> {
-        self.chunks.get(coord)
+        self.chunk_map.get(coord)
     }
 
     /// Возвращает список загруженных чанков
     pub fn get_chunk_keys(&self) -> HashSet<ChunkPos> {
-        self.chunks.iter().map(|(k, _)| { *k }).collect()
+        self.chunk_map.iter().map(|(k, _)| { *k }).collect()
     }
 
     /// Добавляет новый чанк, если чанк по этим координатам уже загружен паникует
     pub fn add_chunk(&mut self, coord: ChunkPos) {
-        assert!(!self.chunks.contains_key(&coord));
+        assert!(!self.chunk_map.contains_key(&coord));
         let chunk = gen_chunk(32);
-        self.chunks.insert(coord, chunk);
+        self.chunk_map.insert(coord, chunk);
     }
 
     /// Удаляет чанк, если чанк по этим координатам уже удален паникует
     pub fn remove_chunk(&mut self, coord: &ChunkPos) {
-        self.chunks.remove(&coord).unwrap();
+        self.chunk_map.remove(&coord).unwrap();
     }
 }
 
