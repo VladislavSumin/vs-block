@@ -32,6 +32,10 @@ impl ChunkCoord {
     pub fn raw_pos(&self) -> &IVec3 {
         &self.coord
     }
+
+    pub fn set_z(&mut self, z: i32) {
+        self.coord.z = z;
+    }
 }
 
 #[cfg(test)]
