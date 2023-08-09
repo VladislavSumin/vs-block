@@ -28,7 +28,7 @@ impl Default for MovementSettings {
     fn default() -> Self {
         Self {
             sensitivity: 0.0002,
-            speed: 12.,
+            speed: 24.,
         }
     }
 }
@@ -52,7 +52,7 @@ fn setup_player_camera(mut commands: Commands) {
     // camera
     commands.spawn((
         Camera3dBundle {
-            transform: Transform::from_xyz(0., 0., 32.0)
+            transform: Transform::from_xyz(0., 0., 128.0)
                 .looking_at(vec3(14., 14., 0.), Vec3::Z),
             ..default()
         },

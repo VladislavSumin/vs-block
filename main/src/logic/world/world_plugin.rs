@@ -68,12 +68,14 @@ fn manage_chunk_loading_state(
 
         for x in anchor_chunk_coord.raw_pos().x - load_radius..anchor_chunk_coord.raw_pos().x + load_radius {
             for y in anchor_chunk_coord.raw_pos().y - load_radius..anchor_chunk_coord.raw_pos().y + load_radius {
-                let pos = ivec3(x, y, 0).into();
-                // Удаляем чанк находящийся внутри радиуса из списка чанков на удаление
-                if !chunks_to_unload.remove(&pos) {
-                    // Если такого чанка вообще не было среди загруженных, добавляем его в очередь на загрузку
-                    if !world.is_chunk_loaded(&pos) {
-                        chunks_to_load.insert(pos);
+                for z in 0..(512 / 16) {
+                    let pos = ivec3(x, y, z).into();
+                    // Удаляем чанк находящийся внутри радиуса из списка чанков на удаление
+                    if !chunks_to_unload.remove(&pos) {
+                        // Если такого чанка вообще не было среди загруженных, добавляем его в очередь на загрузку
+                        if !world.is_chunk_loaded(&pos) {
+                            chunks_to_load.insert(pos);
+                        }
                     }
                 }
             }
@@ -82,13 +84,16 @@ fn manage_chunk_loading_state(
 
     // Удаляем старые чанки
     for chunk_coord in chunks_to_unload {
-        world.remove_chunk(&chunk_coord);
-        let (entity, _) = chunks_query.iter().find(|(_, pos)| pos.pos == chunk_coord).unwrap();
-        commands.entity(entity).despawn();
-        chunk_event_writer.send(ChunkUpdateEvent::Unloaded)
+        if let Some((entity, _)) = chunks_query.iter().find(|(_, pos)| pos.pos == chunk_coord) {
+            world.remove_chunk(&chunk_coord);
+            commands.entity(entity).despawn();
+            chunk_event_writer.send(ChunkUpdateEvent::Unloaded)
+        } else {
+            warn!("Error deleting entity at {:?}", chunk_coord);
+        }
     }
 
-    // Обновляем очередь на загрузку чанков
+// Обновляем очередь на загрузку чанков
     chunk_loading_queue.positions = chunks_to_load;
 }
 

@@ -6,6 +6,7 @@ mod render;
 mod logic;
 
 use bevy::diagnostic::FrameTimeDiagnosticsPlugin;
+use bevy::math::vec3;
 use bevy::prelude::*;
 use world_anchor::WorldAnchorPlugin;
 use crate::camera::CameraPlugin;
@@ -42,13 +43,14 @@ fn setup(
         ..default()
     });
     // light
-    commands.spawn(PointLightBundle {
-        point_light: PointLight {
-            intensity: 15000.0,
+    commands.spawn(DirectionalLightBundle {
+        directional_light: DirectionalLight {
+            illuminance: 15000.0,
             shadows_enabled: true,
             ..default()
         },
-        transform: Transform::from_xyz(4.0, 8.0, 21.0),
+        transform: Transform::from_xyz(4.0, 8.0, 128.0)
+            .looking_at(vec3(90., 90., 60.), Vec3::Z),
         ..default()
     });
 }

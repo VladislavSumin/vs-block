@@ -9,3 +9,4 @@ world-anchor = { path = "../feature/world-anchor" }
 
 bevy = { }
 rand = { }
+noise = { }

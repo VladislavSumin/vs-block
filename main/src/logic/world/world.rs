@@ -1,19 +1,43 @@
+use std::cmp::min;
 use bevy::prelude::Resource;
 use bevy::utils::HashSet;
-use rand::prelude::StdRng;
-use rand::{Rng, SeedableRng};
+use noise::NoiseFn;
 use chunk::ChunkBlockPos;
 use crate::logic::block::{Block, BlockType};
-use crate::logic::chunk::{Chunk, CHUNK_SIZE_USIZE, ChunkMap, ChunkPos};
+use crate::logic::chunk::{Chunk, CHUNK_SIZE, CHUNK_SIZE_USIZE, ChunkMap, ChunkPos};
+
+pub const WORLD_HEIGHT_CHUNKS: u32 = 16;
+pub const WORLD_HEIGHT: u32 = 16 * CHUNK_SIZE as u32;
+
+type Noise = noise::Fbm<noise::SuperSimplex>;
 
 /// Структура мира
-#[derive(Resource, Default)]
+#[derive(Resource)]
 pub struct World {
+    seed: i32,
+    noise: Noise,
+
     /// Список загруженных чанков
     chunk_map: ChunkMap,
 }
 
+impl Default for World {
+    fn default() -> Self {
+        let mut noise = noise::Fbm::new(3);
+        noise.frequency = 0.05;
+        noise.persistence = 0.25;
+        World {
+            seed: 3,
+            noise,
+            chunk_map: ChunkMap::default(),
+        }
+    }
+}
+
 impl World {
+    pub fn get_seed(&self) -> i32 {
+        self.seed
+    }
     /// Возвращает загружен ли чанк по переданной позиции
     pub fn is_chunk_loaded(&self, pos: &ChunkPos) -> bool {
         self.chunk_map.contains_key(pos)
@@ -30,10 +54,10 @@ impl World {
     }
 
     /// Добавляет новый чанк, если чанк по этим координатам уже загружен паникует
-    pub fn add_chunk(&mut self, coord: ChunkPos) {
-        assert!(!self.chunk_map.contains_key(&coord));
-        let chunk = gen_chunk(32);
-        self.chunk_map.insert(coord, chunk);
+    pub fn add_chunk(&mut self, pos: ChunkPos) {
+        assert!(!self.chunk_map.contains_key(&pos));
+        let chunk = gen_chunk(self.seed, pos, &self.noise);
+        self.chunk_map.insert(pos, chunk);
     }
 
     /// Удаляет чанк, если чанк по этим координатам уже удален паникует
@@ -42,22 +66,22 @@ impl World {
     }
 }
 
-fn gen_chunk(seed: i32) -> Chunk {
-    let mut rand = StdRng::seed_from_u64(seed as u64);
+fn gen_chunk(seed: i32, pos: ChunkPos, noise: &Noise) -> Chunk {
     let mut chunk = Chunk::new(());
 
     for x in 0..CHUNK_SIZE_USIZE {
         for y in 0..CHUNK_SIZE_USIZE {
-            for z in 0..CHUNK_SIZE_USIZE {
+            let h = noise.get([(pos.x * 16 + x as i32) as f64 * 0.14, (pos.y * 16 + y as i32) as f64 * 0.14]);
+            let h = (h + 1.0) / 2.0;
+            let h = h / 2.0 + 0.2;
+
+            let h = (128 as f64 * h) as i32;
+            let h = h - (pos.z * CHUNK_SIZE as i32);
+            if h <= 0 { continue; }
+
+            for z in 0..min(h as usize, CHUNK_SIZE_USIZE) {
                 let pos = ChunkBlockPos::new(x as u8, y as u8, z as u8);
-                if z == 0 {
-                    chunk[&pos] = Some(Block::new(BlockType::BEDROCK));
-                    continue;
-                }
-                let gen_block = rand.gen_bool(0.2);
-                if gen_block {
-                    chunk[&pos] = Some(Block::new(BlockType::GRASS));
-                }
+                chunk[&pos] = Some(Block::new(BlockType::GRASS));
             }
         }
     }
