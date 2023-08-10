@@ -19,7 +19,7 @@ pub struct World {
     noise: Noise,
 
     /// Список загруженных чанков
-    chunk_map: ChunkMap,
+    pub chunk_map: ChunkMap,
 }
 
 impl Default for World {

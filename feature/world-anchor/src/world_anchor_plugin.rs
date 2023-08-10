@@ -25,7 +25,7 @@ fn spawn_world_anchor_position<const CHUNK_SIZE: usize>(
 ) where Assert<{ CHUNK_SIZE <= u8::MAX as usize }>: IsTrue {
     for (entity, transform) in new_world_anchors.iter() {
         if let Some(mut entity_commands) = commands.get_entity(entity) {
-            let pos = ChunkPos::from_global_coord(transform.translation);
+            let pos = ChunkPos::from_global_coord(transform.translation.as_ivec3());
             entity_commands.insert(WorldAnchorInChunkPos::<CHUNK_SIZE> { pos });
         }
     }
@@ -36,7 +36,7 @@ fn update_world_anchor_position<const CHUNK_SIZE: usize>(
     mut changed_world_anchors: Query<(&mut WorldAnchorInChunkPos<CHUNK_SIZE>, &Transform), Changed<Transform>>,
 ) where Assert<{ CHUNK_SIZE <= u8::MAX as usize }>: IsTrue {
     for (mut pos, transform) in changed_world_anchors.iter_mut() {
-        let new_pos = ChunkPos::from_global_coord(transform.translation);
+        let new_pos = ChunkPos::from_global_coord(transform.translation.as_ivec3());
 
         // Bevy проверяет не изменился ли компонент по факту записи в переменную, а не посредствам equals
         if pos.pos != new_pos {

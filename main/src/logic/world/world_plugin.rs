@@ -27,7 +27,7 @@ struct ChunkEntity {
 #[derive(Event)]
 pub enum ChunkUpdateEvent {
     Loaded(Entity, ChunkPos),
-    Unloaded,
+    Unloaded(ChunkPos),
 }
 
 #[derive(Resource, Default)]
@@ -87,7 +87,7 @@ fn manage_chunk_loading_state(
         if let Some((entity, _)) = chunks_query.iter().find(|(_, pos)| pos.pos == chunk_coord) {
             world.remove_chunk(&chunk_coord);
             commands.entity(entity).despawn();
-            chunk_event_writer.send(ChunkUpdateEvent::Unloaded)
+            chunk_event_writer.send(ChunkUpdateEvent::Unloaded(chunk_coord))
         } else {
             warn!("Error deleting entity at {:?}", chunk_coord);
         }
