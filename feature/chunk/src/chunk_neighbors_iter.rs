@@ -2,12 +2,12 @@ use std::ops::Deref;
 use bevy_math::{IVec3, ivec3};
 use crate::ChunkPos;
 
-pub struct ChunkNeighborsIterator {
+pub struct ChunkNeighborsIter {
     center: ChunkPos,
     index: u32,
 }
 
-impl ChunkNeighborsIterator {
+impl ChunkNeighborsIter {
     pub fn new(center: ChunkPos) -> Self {
         Self {
             center,
@@ -19,7 +19,7 @@ impl ChunkNeighborsIterator {
     }
 }
 
-impl Iterator for ChunkNeighborsIterator {
+impl Iterator for ChunkNeighborsIter {
     type Item = ChunkPos;
 
     fn next(&mut self) -> Option<Self::Item> {

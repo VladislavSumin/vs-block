@@ -1,10 +1,11 @@
 mod chunk;
-mod chunk_iterator;
+mod chunk_iter;
 mod chunk_block_pos;
 mod chunk_pos;
 mod chunk_map;
 mod absolute_block_pos;
-mod chunk_neighbors_iterator;
+mod chunk_neighbors_iter;
+mod chunk_neighbor_dir;
 
 pub use chunk::{Chunk, CHUNK_SIZE};
 pub use chunk_block_pos::ChunkBlockPos;

@@ -2,7 +2,7 @@ use std::ops::{Add, Deref, DerefMut};
 use bevy_math::{IVec3, ivec3};
 use crate::absolute_block_pos::AbsoluteBlockPos;
 use crate::chunk::CHUNK_SIZE;
-use crate::chunk_neighbors_iterator::ChunkNeighborsIterator;
+use crate::chunk_neighbors_iter::ChunkNeighborsIter;
 use crate::ChunkBlockPos;
 
 /// Координаты чанка в сетке чанков.
@@ -33,8 +33,8 @@ impl ChunkPos {
     }
 
     /// Возвращает итератор из координат чанков окружающих этот (6 штук)
-    pub fn get_neighbors(&self) -> ChunkNeighborsIterator {
-        ChunkNeighborsIterator::new(*self)
+    pub fn get_neighbors(&self) -> ChunkNeighborsIter {
+        ChunkNeighborsIter::new(*self)
     }
 
     /// Возвращает абсолютные координаты чанка в мире
