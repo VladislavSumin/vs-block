@@ -3,9 +3,9 @@ use bevy::math::uvec3;
 use bevy::prelude::Resource;
 use bevy::utils::HashSet;
 use noise::NoiseFn;
-use chunk::ChunkBlockPos;
+use chunk::{CHUNK_SIZE, ChunkPos};
 use crate::logic::block::{Block, BlockType};
-use crate::logic::chunk::{Chunk, CHUNK_SIZE, CHUNK_SIZE_USIZE, ChunkMap, ChunkPos};
+use crate::logic::chunk::{Chunk, ChunkMap};
 
 pub const WORLD_HEIGHT_CHUNKS: u32 = 16;
 pub const WORLD_HEIGHT: u32 = 16 * CHUNK_SIZE as u32;
@@ -70,8 +70,8 @@ impl World {
 fn gen_chunk(seed: i32, pos: ChunkPos, noise: &Noise) -> Chunk {
     let mut chunk = Chunk::new(());
 
-    for x in 0..CHUNK_SIZE_USIZE {
-        for y in 0..CHUNK_SIZE_USIZE {
+    for x in 0..CHUNK_SIZE {
+        for y in 0..CHUNK_SIZE {
             let h = noise.get([(pos.x * 16 + x as i32) as f64 * 0.14, (pos.y * 16 + y as i32) as f64 * 0.14]);
             let h = (h + 1.0) / 2.0;
             let h = h / 2.0 + 0.2;
@@ -80,7 +80,7 @@ fn gen_chunk(seed: i32, pos: ChunkPos, noise: &Noise) -> Chunk {
             let h = h - (pos.z * CHUNK_SIZE as i32);
             if h <= 0 { continue; }
 
-            for z in 0..min(h as usize, CHUNK_SIZE_USIZE) {
+            for z in 0..min(h as usize, CHUNK_SIZE) {
                 let pos = uvec3(x as u32, y as u32, z as u32).try_into().unwrap();
                 chunk[&pos] = Some(Block::new(BlockType::GRASS));
             }

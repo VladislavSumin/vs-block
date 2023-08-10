@@ -1,5 +1,3 @@
-#![feature(generic_const_exprs)]
-
 mod camera;
 mod key_binding;
 mod render;
@@ -21,7 +19,7 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_plugins(KeyBindingsPlugin)
         .add_plugins(CameraPlugin)
-        .add_plugins(WorldAnchorPlugin::<16>)
+        .add_plugins(WorldAnchorPlugin)
         .add_plugins(WorldPlugin)
         .add_plugins(ChunkRenderPlugin)
         .add_plugins(FrameTimeDiagnosticsPlugin)

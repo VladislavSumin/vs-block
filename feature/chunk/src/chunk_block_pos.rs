@@ -1,16 +1,15 @@
 use std::ops::Deref;
 use bevy_math::{IVec3, UVec3, Vec3};
-use generic_assert::{Assert, IsTrue};
+use crate::chunk::CHUNK_SIZE;
 
 /// Координаты блока в пределах чанка
 /// TODO добавить compile time проверку выхода за границы допустимых для чанка индексов
 #[derive(Default, Copy, Clone)]
-pub struct ChunkBlockPos<const CHUNK_SIZE: usize> where Assert<{ CHUNK_SIZE <= u8::MAX as usize }>: IsTrue {
+pub struct ChunkBlockPos {
     pos: UVec3,
 }
 
-impl<const CHUNK_SIZE: usize> TryFrom<UVec3> for ChunkBlockPos<CHUNK_SIZE>
-    where Assert<{ CHUNK_SIZE <= u8::MAX as usize }>: IsTrue {
+impl TryFrom<UVec3> for ChunkBlockPos {
     type Error = ();
 
     fn try_from(value: UVec3) -> Result<Self, Self::Error> {
@@ -22,8 +21,7 @@ impl<const CHUNK_SIZE: usize> TryFrom<UVec3> for ChunkBlockPos<CHUNK_SIZE>
     }
 }
 
-impl<const CHUNK_SIZE: usize> TryFrom<IVec3> for ChunkBlockPos<CHUNK_SIZE>
-    where Assert<{ CHUNK_SIZE <= u8::MAX as usize }>: IsTrue {
+impl TryFrom<IVec3> for ChunkBlockPos {
     type Error = ();
 
     fn try_from(value: IVec3) -> Result<Self, Self::Error> {
@@ -36,8 +34,7 @@ impl<const CHUNK_SIZE: usize> TryFrom<IVec3> for ChunkBlockPos<CHUNK_SIZE>
     }
 }
 
-impl<const CHUNK_SIZE: usize> Deref for ChunkBlockPos<CHUNK_SIZE>
-    where Assert<{ CHUNK_SIZE <= u8::MAX as usize }>: IsTrue {
+impl Deref for ChunkBlockPos {
     type Target = UVec3;
 
     fn deref(&self) -> &Self::Target {
@@ -45,8 +42,7 @@ impl<const CHUNK_SIZE: usize> Deref for ChunkBlockPos<CHUNK_SIZE>
     }
 }
 
-impl<const CHUNK_SIZE: usize> Into<Vec3> for ChunkBlockPos<CHUNK_SIZE>
-    where Assert<{ CHUNK_SIZE <= u8::MAX as usize }>: IsTrue {
+impl Into<Vec3> for ChunkBlockPos {
     fn into(self) -> Vec3 {
         self.as_vec3()
     }

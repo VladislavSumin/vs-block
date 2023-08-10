@@ -7,6 +7,5 @@ edition = "2021"
 
 [dependencies]
 chunk = { path = "../chunk" }
-generic-assert = { path = "../generic-assert" }
 
 bevy = { }

@@ -1,5 +1,3 @@
-#![feature(generic_const_exprs)]
-
 mod world_anchor_plugin;
 mod world_anchor;
 

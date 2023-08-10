@@ -1,8 +1,8 @@
 use bevy::math::ivec3;
 use bevy::prelude::*;
 use bevy::utils::HashSet;
+use chunk::ChunkPos;
 use world_anchor::{WorldAnchor, WorldAnchorInChunkPos};
-use crate::logic::chunk::ChunkPos;
 use crate::logic::world::world::World;
 
 pub struct WorldPlugin;
@@ -42,9 +42,9 @@ fn manage_chunk_loading_state(
     mut chunk_loading_queue: ResMut<ChunkLoadingQueue>,
     mut chunk_event_writer: EventWriter<ChunkUpdateEvent>,
     chunks_query: Query<(Entity, &ChunkEntity)>,
-    changed_world_anchors_pos: Query<(), Changed<WorldAnchorInChunkPos<16>>>,
+    changed_world_anchors_pos: Query<(), Changed<WorldAnchorInChunkPos>>,
     changed_world_anchors_conf: Query<(), Changed<WorldAnchor>>,
-    world_anchors_pos: Query<(&WorldAnchorInChunkPos<16>, &WorldAnchor)>,
+    world_anchors_pos: Query<(&WorldAnchorInChunkPos, &WorldAnchor)>,
 ) {
     // Если позиции и параметры якорей не изменились то пересчитывать не нужно
     if changed_world_anchors_pos.is_empty() && changed_world_anchors_conf.is_empty() {

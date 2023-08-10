@@ -4,8 +4,8 @@ use bevy::pbr::{PbrBundle, StandardMaterial};
 use bevy::prelude::*;
 use bevy::utils::HashMap;
 use strum::IntoEnumIterator;
-use chunk::AbsoluteBlockPos;
-use crate::logic::chunk::{Chunk, ChunkBlockPos, ChunkMap, ChunkPos};
+use chunk::{AbsoluteBlockPos, ChunkBlockPos, ChunkPos};
+use crate::logic::chunk::{Chunk, ChunkMap};
 use crate::render::{AbsoluteBlockFaceDirection, MeshBuilder};
 use crate::logic::world::{ChunkUpdateEvent, World};
 

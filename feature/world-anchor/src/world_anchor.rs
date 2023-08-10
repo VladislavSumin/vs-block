@@ -1,6 +1,5 @@
 use bevy::prelude::Component;
 use chunk::ChunkPos;
-use generic_assert::{Assert, IsTrue};
 
 const DEFAULT_LOAD_RADIUS: u32 = 2;
 
@@ -22,7 +21,6 @@ impl Default for WorldAnchor {
 
 /// Позиция [WorldAnchor] в сетке чанков
 #[derive(Component)]
-pub struct WorldAnchorInChunkPos<const CHUNK_SIZE: usize>
-    where Assert<{ CHUNK_SIZE <= u8::MAX as usize }>: IsTrue {
-    pub pos: ChunkPos<CHUNK_SIZE>,
+pub struct WorldAnchorInChunkPos {
+    pub pos: ChunkPos,
 }
