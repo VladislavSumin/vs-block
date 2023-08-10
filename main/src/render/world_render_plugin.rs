@@ -8,6 +8,7 @@ use chunk::{AbsoluteBlockPos, ChunkBlockPos, ChunkPos};
 use crate::logic::chunk::{Chunk, ChunkMap};
 use crate::render::{AbsoluteBlockFaceDirection, MeshBuilder};
 use crate::logic::world::{ChunkUpdateEvent, World};
+use crate::render::chunk_mesh_builder::build_chunk_mesh;
 
 /// Отвечает за генерацию [Mesh] для загруженных [Chunk], а так же за обновление [Mesh] при
 /// обновлении [Chunk]
@@ -42,7 +43,7 @@ fn update_chunk_mesh(
                 rendered_chunks_map.chunks.insert(*pos, *entity);
 
                 let chunk = world.get_chunk(pos).unwrap();
-                let mesh = assets.add(create_chunk_mesh(&world.chunk_map, chunk, *pos));
+                let mesh = assets.add(build_chunk_mesh(chunk, *pos));
 
                 let texture: Handle<Image> = asset_server.load("dirt.png");
 
@@ -67,35 +68,5 @@ fn update_chunk_mesh(
                 rendered_chunks_map.chunks.remove(pos);
             }
         }
-    }
-}
-
-
-// TODO вынести эту функцию отдельно
-fn create_chunk_mesh(map: &ChunkMap, chunk: &Chunk, chunk_pos: ChunkPos) -> Mesh {
-    let mut builder = MeshBuilder::new();
-    for (block_coord, block) in chunk.into_iter() {
-        if let Some(_) = block {
-            builder.set_transition(block_coord.into());
-
-            for dir in AbsoluteBlockFaceDirection::iter() {
-                if !has_neighbor_block(map, chunk, chunk_pos, block_coord, dir) {
-                    builder.add_mesh_data(dir);
-                }
-            }
-        }
-    }
-    builder.build()
-}
-
-fn has_neighbor_block(map: &ChunkMap, chunk: &Chunk, chunk_pos: ChunkPos, pos: ChunkBlockPos, dir: AbsoluteBlockFaceDirection) -> bool {
-    // Вычисляем глобальные координаты блока соседствующего с данным с переданной стороны
-    let dir_pos: IVec3 = dir.into();
-    let global_pos: AbsoluteBlockPos = (chunk_pos.get_absolute_coord() + pos.as_ivec3() + dir_pos).into();
-
-    if let Ok(local_pos) = chunk_pos.try_global_pos_into_chunk_pos(global_pos) {
-        chunk[&local_pos].is_some()
-    } else {
-        map.get_block_at(global_pos).is_some()
     }
 }
