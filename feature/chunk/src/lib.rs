@@ -12,3 +12,4 @@ pub use chunk_block_pos::ChunkBlockPos;
 pub use chunk_pos::ChunkPos;
 pub use chunk_map::ChunkMap;
 pub use absolute_block_pos::AbsoluteBlockPos;
+pub use chunk_neighbor_dir::ChunkNeighborDir;
