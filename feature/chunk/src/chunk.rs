@@ -3,6 +3,7 @@ use crate::chunk_block_pos::ChunkBlockPos;
 
 type Array3<BLOCK, const SIZE: usize> = [[[BLOCK; SIZE]; SIZE]; SIZE];
 
+/// Размер чанка
 pub const CHUNK_SIZE: usize = 16;
 
 /// Сущность описывающая один игровой чанк.

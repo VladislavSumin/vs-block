@@ -64,10 +64,10 @@ fn manage_chunk_loading_state(
 
         // Получаем координаты чанка в котором находится WorldAnchor
         let mut anchor_chunk_coord = pos.pos;
-        anchor_chunk_coord.set_z(0);
+        anchor_chunk_coord.z = 0;
 
-        for x in anchor_chunk_coord.raw_pos().x - load_radius..anchor_chunk_coord.raw_pos().x + load_radius {
-            for y in anchor_chunk_coord.raw_pos().y - load_radius..anchor_chunk_coord.raw_pos().y + load_radius {
+        for x in anchor_chunk_coord.x - load_radius..anchor_chunk_coord.x + load_radius {
+            for y in anchor_chunk_coord.y - load_radius..anchor_chunk_coord.y + load_radius {
                 for z in 0..(512 / 16) {
                     let pos = ivec3(x, y, z).into();
                     // Удаляем чанк находящийся внутри радиуса из списка чанков на удаление
