@@ -22,6 +22,16 @@ impl<const CHUNK_SIZE: usize> ChunkPos<CHUNK_SIZE> where Assert<{ CHUNK_SIZE <= 
         ).into()
     }
 
+    /// Проверяет принадлежат ли глобальные координаты блока текущему чанку, и если принадлежат возвращают локальные
+    /// координаты в этом чанке
+    fn try_global_pos_into_chunk_pos(&self, global_pos: AbsoluteBlockPos) -> Result<ChunkBlockPos<CHUNK_SIZE>, ()> {
+        // Вычитаем из глобальных координат координаты текущего чанка в абсолютной системе координат
+        let local_pos = *global_pos - self.get_absolute_coord();
+        // Пробуем привести полученное значение к координатам чанка (если переданный блок не лежит в этом чанке у
+        // у нас ничего из этого не выйдет)
+        local_pos.try_into()
+    }
+
     /// Возвращает абсолютные координаты чанка в мире
     pub fn get_absolute_coord(&self) -> IVec3 {
         self.pos * CHUNK_SIZE as i32
