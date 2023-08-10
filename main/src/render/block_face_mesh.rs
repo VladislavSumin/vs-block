@@ -27,12 +27,12 @@ pub enum AbsoluteBlockFaceDirection {
 impl Into<IVec3> for AbsoluteBlockFaceDirection {
     fn into(self) -> IVec3 {
         match self {
-            AbsoluteBlockFaceDirection::PosX => { ivec3(1, 0, 0) }
-            AbsoluteBlockFaceDirection::NegX => { ivec3(-1, 0, 0) }
-            AbsoluteBlockFaceDirection::PosY => { ivec3(0, 1, 0) }
-            AbsoluteBlockFaceDirection::NegY => { ivec3(0, -1, 0) }
-            AbsoluteBlockFaceDirection::PosZ => { ivec3(0, 0, 1) }
-            AbsoluteBlockFaceDirection::NegZ => { ivec3(0, 0, -1) }
+            AbsoluteBlockFaceDirection::PosX => { IVec3::X }
+            AbsoluteBlockFaceDirection::NegX => { IVec3::NEG_X }
+            AbsoluteBlockFaceDirection::PosY => { IVec3::Y }
+            AbsoluteBlockFaceDirection::NegY => { IVec3::NEG_Y }
+            AbsoluteBlockFaceDirection::PosZ => { IVec3::Z }
+            AbsoluteBlockFaceDirection::NegZ => { IVec3::NEG_Z }
         }
     }
 }
