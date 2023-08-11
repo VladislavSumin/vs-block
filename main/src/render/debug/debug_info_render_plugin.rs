@@ -1,5 +1,5 @@
 use bevy::app::{App, Startup};
-use bevy::diagnostic::{DiagnosticsStore, FrameTimeDiagnosticsPlugin};
+use bevy::diagnostic::{DiagnosticsStore, EntityCountDiagnosticsPlugin, FrameTimeDiagnosticsPlugin};
 use bevy::prelude::*;
 use std::fmt::Write;
 use crate::camera::PlayerCamera;
@@ -46,6 +46,7 @@ fn setup_debug_info(mut commands: Commands, asset_server: Res<AssetServer>) {
 fn update_debug_info(
     diagnostics: Res<DiagnosticsStore>,
     player_query: Query<&Transform, With<PlayerCamera>>,
+    mesh_query: Query<(), With<Handle<Mesh>>>,
     mut text_query: Query<&mut Text, With<DebugText>>,
 ) {
     let fps = diagnostics
@@ -55,16 +56,23 @@ fn update_debug_info(
 
     let player_transition = player_query.single();
     let player_coord = player_transition.translation;
-    let player_rot = player_transition.rotation;
+
+    let entity_count = diagnostics
+        .get(EntityCountDiagnosticsPlugin::ENTITY_COUNT)
+        .and_then(|entity_count| entity_count.average())
+        .unwrap_or(0.) as u32;
+
+    let mesh_count = mesh_query.iter().len() as u32;
 
     let text = &mut text_query.single_mut().sections[0].value;
     text.clear();
     write!(
         text,
-        "  FPS:{:3} pos-> x:{:.01} y:{:.01} z:{:.01} rot-> x:{:.01} y:{:.01} z:{:.01}",
+        "  FPS:{:3} x:{:.01} y:{:.01} z:{:.01} e={}, m={}",
         fps,
         player_coord.x, player_coord.y, player_coord.z,
-        player_rot.x.to_degrees(), player_rot.y.to_degrees(), player_rot.z.to_degrees(),
+        entity_count,
+        mesh_count,
     )
         .unwrap();
 }
