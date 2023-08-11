@@ -3,7 +3,7 @@ mod key_binding;
 mod render;
 mod logic;
 
-use bevy::diagnostic::FrameTimeDiagnosticsPlugin;
+use bevy::diagnostic::{EntityCountDiagnosticsPlugin, FrameTimeDiagnosticsPlugin};
 use bevy::math::vec3;
 use bevy::prelude::*;
 use world_anchor::WorldAnchorPlugin;
@@ -16,14 +16,21 @@ use crate::render::debug::DebugInfoRenderPlugin;
 
 fn main() {
     App::new()
+        // Default bevy plugins setup
         .add_plugins(DefaultPlugins)
+
+        // Additional bevy plugins setup
+        .add_plugins(FrameTimeDiagnosticsPlugin)
+        .add_plugins(EntityCountDiagnosticsPlugin)
+
+        // Custom project plugins setup
         .add_plugins(KeyBindingsPlugin)
         .add_plugins(CameraPlugin)
         .add_plugins(WorldAnchorPlugin)
         .add_plugins(WorldPlugin)
         .add_plugins(ChunkRenderPlugin)
-        .add_plugins(FrameTimeDiagnosticsPlugin)
         .add_plugins(DebugInfoRenderPlugin)
+
         .add_systems(Startup, setup)
         .run();
 }
@@ -31,16 +38,9 @@ fn main() {
 // TODO удалить
 fn setup(
     mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    // plane
-    commands.spawn(PbrBundle {
-        mesh: meshes.add(shape::Plane::from_size(5.0).into()),
-        material: materials.add(Color::rgb(0.3, 0.5, 0.3).into()),
-        ..default()
-    });
-    // light
+
+    // Спавним свет, пока у нас нет отдельного плагина под это дело, позже перенесу у другое место
     commands.spawn(DirectionalLightBundle {
         directional_light: DirectionalLight {
             illuminance: 15000.0,
