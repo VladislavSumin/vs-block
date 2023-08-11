@@ -57,7 +57,7 @@ fn setup_player_camera(mut commands: Commands) {
             ..default()
         },
         PlayerCamera,
-        WorldAnchor { load_radius: 5 },
+        WorldAnchor { load_radius: 10 },
     ));
 }
 
