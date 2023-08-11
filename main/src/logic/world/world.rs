@@ -72,7 +72,7 @@ fn gen_chunk(seed: i32, pos: ChunkPos, noise: &Noise) -> Chunk {
 
     for x in 0..CHUNK_SIZE {
         for y in 0..CHUNK_SIZE {
-            let h = noise.get([(pos.x * 16 + x as i32) as f64 * 0.14, (pos.y * 16 + y as i32) as f64 * 0.14]);
+            let h = noise.get([(pos.x * CHUNK_SIZE as i32 + x as i32) as f64 * 0.14, (pos.y * CHUNK_SIZE as i32 + y as i32) as f64 * 0.14]);
             let h = (h + 1.0) / 2.0;
             let h = h / 2.0 + 0.2;
 
