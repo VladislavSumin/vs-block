@@ -19,14 +19,9 @@ impl Plugin for WorldPlugin {
     }
 }
 
-#[derive(Component)]
-struct ChunkEntity {
-    pos: ChunkPos,
-}
-
 #[derive(Event)]
 pub enum ChunkUpdateEvent {
-    Loaded(Entity, ChunkPos),
+    Loaded(ChunkPos),
     Unloaded(ChunkPos),
 }
 
@@ -37,11 +32,9 @@ struct ChunkLoadingQueue {
 
 /// Загружает управлаяет очередью загрузки чанков, а так же выгружает не нужные чанки из памяти
 fn manage_chunk_loading_state(
-    mut commands: Commands,
     mut world: ResMut<World>,
     mut chunk_loading_queue: ResMut<ChunkLoadingQueue>,
     mut chunk_event_writer: EventWriter<ChunkUpdateEvent>,
-    chunks_query: Query<(Entity, &ChunkEntity)>,
     changed_world_anchors_pos: Query<(), Changed<WorldAnchorInChunkPos>>,
     changed_world_anchors_conf: Query<(), Changed<WorldAnchor>>,
     world_anchors_pos: Query<(&WorldAnchorInChunkPos, &WorldAnchor)>,
@@ -84,31 +77,24 @@ fn manage_chunk_loading_state(
 
     // Удаляем старые чанки
     for chunk_coord in chunks_to_unload {
-        if let Some((entity, _)) = chunks_query.iter().find(|(_, pos)| pos.pos == chunk_coord) {
-            world.remove_chunk(&chunk_coord);
-            commands.entity(entity).despawn();
-            chunk_event_writer.send(ChunkUpdateEvent::Unloaded(chunk_coord))
-        } else {
-            warn!("Error deleting entity at {:?}", chunk_coord);
-        }
+        world.remove_chunk(&chunk_coord);
+        chunk_event_writer.send(ChunkUpdateEvent::Unloaded(chunk_coord))
     }
 
-// Обновляем очередь на загрузку чанков
+    // Обновляем очередь на загрузку чанков
     chunk_loading_queue.positions = chunks_to_load;
 }
 
 /// Загружает чинки из очереди [ChunkLoadingQueue]
 fn load_new_chunks_from_queue(
-    mut commands: Commands,
     mut world: ResMut<World>,
     mut chunk_event_writer: EventWriter<ChunkUpdateEvent>,
     mut chunk_loading_queue: ResMut<ChunkLoadingQueue>,
 ) {
     let mut generated_chunks: HashSet<ChunkPos> = HashSet::new();
     for pos in chunk_loading_queue.positions.iter().take(100) {
-        let entity = commands.spawn(ChunkEntity { pos: *pos }).id();
         world.add_chunk(*pos);
-        chunk_event_writer.send(ChunkUpdateEvent::Loaded(entity, *pos));
+        chunk_event_writer.send(ChunkUpdateEvent::Loaded(*pos));
         generated_chunks.insert(*pos);
     }
     for pos in generated_chunks {

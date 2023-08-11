@@ -2,7 +2,7 @@ use bevy::app::{App, Plugin, Update};
 use bevy::asset::Assets;
 use bevy::pbr::{PbrBundle, StandardMaterial};
 use bevy::prelude::*;
-use bevy::utils::HashMap;
+use bevy::utils::{HashMap, HashSet};
 use chunk::ChunkPos;
 use crate::logic::world::{ChunkUpdateEvent, World};
 use crate::render::chunk_mesh_builder::build_chunk_mesh;
@@ -11,15 +11,10 @@ use crate::render::chunk_mesh_builder::build_chunk_mesh;
 /// обновлении [Chunk]
 pub struct ChunkRenderPlugin;
 
-#[derive(Default, Resource)]
-struct RenderedChunksMap {
-    chunks: HashMap<ChunkPos, Entity>,
-}
-
 impl Plugin for ChunkRenderPlugin {
     fn build(&self, app: &mut App) {
         app
-            .init_resource::<RenderedChunksMap>()
+            .init_resource::<WorldRenderState>()
             .add_systems(Startup, load_world_material)
             .add_systems(Update, update_chunk_mesh)
         ;
@@ -29,6 +24,18 @@ impl Plugin for ChunkRenderPlugin {
 #[derive(Resource)]
 struct WorldMaterial {
     material_handle: Handle<StandardMaterial>,
+}
+
+#[derive(Resource, Default)]
+struct WorldRenderState {
+    /// Чанки которые необходимо отрендерить
+    chunk_to_render: HashSet<ChunkPos>,
+
+    /// Чанки которые необходимо выгрузить из памяти
+    chunk_to_despawn: HashSet<ChunkPos>,
+
+    /// Отрендеренные чанки
+    rendered_chunks: HashMap<ChunkPos, Option<Entity>>,
 }
 
 fn load_world_material(
@@ -57,40 +64,63 @@ fn load_world_material(
 
 // TODO тестовая таска, переписать полностью
 fn update_chunk_mesh(
+    mut render_state: ResMut<WorldRenderState>,
     mut commands: Commands,
     mut chunk_event: EventReader<ChunkUpdateEvent>,
     world: Res<World>,
     mut assets: ResMut<Assets<Mesh>>,
-    mut rendered_chunks_map: ResMut<RenderedChunksMap>,
     world_material: Res<WorldMaterial>,
 ) {
+    // Обновляем состояние render_state добавляя туда чанки которые необходимо загрузить / выгрузить
     for event in chunk_event.iter() {
         match event {
-            ChunkUpdateEvent::Loaded(entity, pos) => {
-                rendered_chunks_map.chunks.insert(*pos, *entity);
-
-                let chunk = world.get_chunk(pos).unwrap();
-                let mesh = build_chunk_mesh(chunk, *pos);
-
-                // Не спавним пустые меши, это сильно бьет по производительности рендера
-                if mesh.indices().map(|indexes| { indexes.is_empty() }).unwrap_or(true) {
-                    continue;
-                }
-
-                let mesh = assets.add(mesh);
-
-                commands.entity(*entity).insert(
-                    PbrBundle {
-                        mesh,
-                        material: world_material.material_handle.clone(),
-                        transform: Transform::from_translation(pos.get_absolute_coord().as_vec3()),
-                        ..default()
-                    }
-                );
+            ChunkUpdateEvent::Loaded(pos) => {
+                render_state.chunk_to_render.insert(*pos);
+                render_state.chunk_to_despawn.remove(pos);
             }
             ChunkUpdateEvent::Unloaded(pos) => {
-                rendered_chunks_map.chunks.remove(pos);
+                render_state.chunk_to_render.remove(pos);
+                render_state.chunk_to_despawn.insert(*pos);
             }
         }
+    }
+
+    // Рендерим новые чанки и добавляем их rendered_chunks
+    let new_chunks: Vec<(ChunkPos, Option<Entity>)> = render_state.chunk_to_render.drain().map(|pos| {
+        let chunk = world.get_chunk(&pos).unwrap();
+        let mesh = build_chunk_mesh(chunk, pos);
+
+        // Не спавним пустые меши, это сильно бьет по производительности рендера
+        if mesh.indices().map(|indexes| { indexes.is_empty() }).unwrap_or(true) {
+            return (pos, None);
+        }
+
+        let mesh = assets.add(mesh);
+
+        let entity = commands.spawn(
+            PbrBundle {
+                mesh,
+                material: world_material.material_handle.clone(),
+                transform: Transform::from_translation(pos.get_absolute_coord().as_vec3()),
+                ..default()
+            }
+        ).id();
+
+        (pos, Some(entity))
+    }).collect();
+    render_state.rendered_chunks.extend(new_chunks);
+
+    // Пробуем удалить старые чанки
+    let deleted_chunks: Vec<ChunkPos> = render_state.chunk_to_despawn.iter().filter_map(|pos| {
+        let rendered_chunk = render_state.rendered_chunks.get(pos).unwrap_or(&None);
+        match rendered_chunk {
+            None => { Some(*pos) }
+            Some(entity) => {
+                commands.get_entity(*entity).map(|mut ec| { ec.despawn(); *pos })
+            }
+        }
+    }).collect();
+    for pos in deleted_chunks{
+        render_state.chunk_to_despawn.remove(&pos);
     }
 }
