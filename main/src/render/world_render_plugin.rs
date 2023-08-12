@@ -28,13 +28,17 @@ struct WorldMaterial {
 
 #[derive(Resource, Default)]
 struct WorldRenderState {
-    /// Чанки которые необходимо отрендерить
+    /// Чанки которые необходимо отрендерить (или перерендерить)
     chunk_to_render: HashSet<ChunkPos>,
 
     /// Чанки которые необходимо выгрузить из памяти
     chunk_to_despawn: HashSet<ChunkPos>,
 
-    /// Отрендеренные чанки
+    /// Отрендеренные чанки.
+    ///
+    /// Если по ключу присутствует значение, это означает, что чанк был отрендере, при этом само значение optional так
+    /// как мы не создаем Entity если в результате оптимизации меша чанка он получился пустым (иначе это сильно
+    /// ухудшает общую производительность)
     rendered_chunks: HashMap<ChunkPos, Option<Entity>>,
 }
 
@@ -116,11 +120,14 @@ fn update_chunk_mesh(
         match rendered_chunk {
             None => { Some(*pos) }
             Some(entity) => {
-                commands.get_entity(*entity).map(|mut ec| { ec.despawn(); *pos })
+                commands.get_entity(*entity).map(|mut ec| {
+                    ec.despawn();
+                    *pos
+                })
             }
         }
     }).collect();
-    for pos in deleted_chunks{
+    for pos in deleted_chunks {
         render_state.chunk_to_despawn.remove(&pos);
     }
 }
