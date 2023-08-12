@@ -16,7 +16,9 @@ impl Plugin for ChunkRenderPlugin {
         app
             .init_resource::<WorldRenderState>()
             .add_systems(Startup, load_world_material)
-            .add_systems(Update, update_chunk_mesh)
+            .add_systems(Update, read_chunk_events)
+            .add_systems(Update, load_chunks)
+            .add_systems(Update, unload_chunks)
         ;
     }
 }
@@ -32,6 +34,11 @@ struct WorldRenderState {
     chunk_to_render: HashSet<ChunkPos>,
 
     /// Чанки которые необходимо выгрузить из памяти
+    ///
+    /// Мы не можем обойтись без этой коллекции из-за асинхронной природы работы команд. Может произойти ситуация когда
+    /// мы сгенерировали меш для нового чанка и отдали bevy команду на спавн этого чанка в мир, но эта команда может не
+    /// успеть выполнится до получения команды на удаление этого чанка, поэтому необходимо сначала проверить была ли
+    /// entity в rendered_chunks на самом деле была сгенерена или еще нет
     chunk_to_despawn: HashSet<ChunkPos>,
 
     /// Отрендеренные чанки.
@@ -66,14 +73,10 @@ fn load_world_material(
     commands.insert_resource(world_material);
 }
 
-// TODO тестовая таска, переписать полностью
-fn update_chunk_mesh(
+/// Читает события [ChunkUpdateEvent] и управляет очередью загрузки/выгрузки чанков
+fn read_chunk_events(
     mut render_state: ResMut<WorldRenderState>,
-    mut commands: Commands,
     mut chunk_event: EventReader<ChunkUpdateEvent>,
-    world: Res<World>,
-    mut assets: ResMut<Assets<Mesh>>,
-    world_material: Res<WorldMaterial>,
 ) {
     // Обновляем состояние render_state добавляя туда чанки которые необходимо загрузить / выгрузить
     for event in chunk_event.iter() {
@@ -88,6 +91,16 @@ fn update_chunk_mesh(
             }
         }
     }
+}
+
+/// Создает меши новых чанков и загружает их в память
+fn load_chunks(
+    mut render_state: ResMut<WorldRenderState>,
+    mut commands: Commands,
+    world: Res<World>,
+    mut assets: ResMut<Assets<Mesh>>,
+    world_material: Res<WorldMaterial>,
+) {
 
     // Рендерим новые чанки и добавляем их rendered_chunks
     let new_chunks: Vec<(ChunkPos, Option<Entity>)> = render_state.chunk_to_render.drain().map(|pos| {
@@ -113,8 +126,13 @@ fn update_chunk_mesh(
         (pos, Some(entity))
     }).collect();
     render_state.rendered_chunks.extend(new_chunks);
+}
 
-    // Пробуем удалить старые чанки
+/// Выгружает ненужные меши чанков из памяти
+fn unload_chunks(
+    mut render_state: ResMut<WorldRenderState>,
+    mut commands: Commands,
+) {
     let deleted_chunks: Vec<ChunkPos> = render_state.chunk_to_despawn.iter().filter_map(|pos| {
         let rendered_chunk = render_state.rendered_chunks.get(pos).unwrap_or(&None);
         match rendered_chunk {
