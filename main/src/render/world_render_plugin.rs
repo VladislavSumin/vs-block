@@ -14,6 +14,7 @@ pub struct ChunkRenderPlugin;
 impl Plugin for ChunkRenderPlugin {
     fn build(&self, app: &mut App) {
         app
+            .init_resource::<WorldUnloadChunksQueue>()
             .init_resource::<WorldRenderState>()
             .add_systems(Startup, load_world_material)
             .add_systems(Update, read_chunk_events)
@@ -21,6 +22,17 @@ impl Plugin for ChunkRenderPlugin {
             .add_systems(Update, unload_chunks)
         ;
     }
+}
+
+#[derive(Resource, Deref, DerefMut, Default)]
+struct WorldUnloadChunksQueue {
+    /// Чанки которые необходимо выгрузить из памяти
+    ///
+    /// Мы не можем обойтись без этой коллекции из-за асинхронной природы работы команд. Может произойти ситуация когда
+    /// мы сгенерировали меш для нового чанка и отдали bevy команду на спавн этого чанка в мир, но эта команда может не
+    /// успеть выполнится до получения команды на удаление этого чанка, поэтому необходимо сначала проверить была ли
+    /// entity в rendered_chunks на самом деле была сгенерена или еще нет
+    chunk_to_despawn: HashSet<ChunkPos>,
 }
 
 #[derive(Resource)]
@@ -32,14 +44,6 @@ struct WorldMaterial {
 struct WorldRenderState {
     /// Чанки которые необходимо отрендерить (или перерендерить)
     chunk_to_render: HashSet<ChunkPos>,
-
-    /// Чанки которые необходимо выгрузить из памяти
-    ///
-    /// Мы не можем обойтись без этой коллекции из-за асинхронной природы работы команд. Может произойти ситуация когда
-    /// мы сгенерировали меш для нового чанка и отдали bevy команду на спавн этого чанка в мир, но эта команда может не
-    /// успеть выполнится до получения команды на удаление этого чанка, поэтому необходимо сначала проверить была ли
-    /// entity в rendered_chunks на самом деле была сгенерена или еще нет
-    chunk_to_despawn: HashSet<ChunkPos>,
 
     /// Отрендеренные чанки.
     ///
@@ -76,6 +80,7 @@ fn load_world_material(
 /// Читает события [ChunkUpdateEvent] и управляет очередью загрузки/выгрузки чанков
 fn read_chunk_events(
     mut render_state: ResMut<WorldRenderState>,
+    mut world_unload_chunks_queue: ResMut<WorldUnloadChunksQueue>,
     mut chunk_event: EventReader<ChunkUpdateEvent>,
 ) {
     // Обновляем состояние render_state добавляя туда чанки которые необходимо загрузить / выгрузить
@@ -83,11 +88,11 @@ fn read_chunk_events(
         match event {
             ChunkUpdateEvent::Loaded(pos) => {
                 render_state.chunk_to_render.insert(*pos);
-                render_state.chunk_to_despawn.remove(pos);
+                world_unload_chunks_queue.remove(pos);
             }
             ChunkUpdateEvent::Unloaded(pos) => {
                 render_state.chunk_to_render.remove(pos);
-                render_state.chunk_to_despawn.insert(*pos);
+                world_unload_chunks_queue.insert(*pos);
             }
         }
     }
@@ -130,22 +135,43 @@ fn load_chunks(
 
 /// Выгружает ненужные меши чанков из памяти
 fn unload_chunks(
+    mut world_unload_chunks_queue: ResMut<WorldUnloadChunksQueue>,
     mut render_state: ResMut<WorldRenderState>,
     mut commands: Commands,
 ) {
-    let deleted_chunks: Vec<ChunkPos> = render_state.chunk_to_despawn.iter().filter_map(|pos| {
-        let rendered_chunk = render_state.rendered_chunks.get(pos).unwrap_or(&None);
+    world_unload_chunks_queue.retain(|pos| {
+        let rendered_chunk = render_state.rendered_chunks.get(pos);
         match rendered_chunk {
-            None => { Some(*pos) }
-            Some(entity) => {
-                commands.get_entity(*entity).map(|mut ec| {
-                    ec.despawn();
-                    *pos
-                })
+            None => {
+                // Этот кейс означает что чанк был добавлен в очередь на загрузку, а после был удален еще до того как
+                // загрузка чанка успела завершиться. В этом случае просто удаляем чанк из очереди
+                false
+            }
+            Some(entity_option) => {
+                // Чанк был загружен (была отдана команда bevy на загрузку в память)
+                match entity_option {
+                    None => {
+                        // Чанк не имеет меша, можно смело удалять
+                        render_state.rendered_chunks.remove(pos).unwrap();
+                        false
+                    }
+                    Some(entity) => {
+                        let entity_commands = commands.get_entity(*entity);
+                        match entity_commands {
+                            None => {
+                                // Ентити еще не успела загрузиться, попробуем удалить чанк позже
+                                true
+                            }
+                            Some(mut entity_commands) => {
+                                // Ентити загрузилась, удаляем
+                                entity_commands.despawn();
+                                render_state.rendered_chunks.remove(pos).unwrap();
+                                false
+                            }
+                        }
+                    }
+                }
             }
         }
-    }).collect();
-    for pos in deleted_chunks {
-        render_state.chunk_to_despawn.remove(&pos);
-    }
+    });
 }
