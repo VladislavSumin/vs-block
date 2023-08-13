@@ -1,4 +1,5 @@
-use std::ops::{Add, Deref, DerefMut};
+use std::ops::Add;
+use bevy_derive::{Deref, DerefMut};
 use bevy_math::{IVec3, ivec3};
 use crate::absolute_block_pos::AbsoluteBlockPos;
 use crate::chunk::CHUNK_SIZE;
@@ -7,7 +8,7 @@ use crate::ChunkBlockPos;
 
 /// Координаты чанка в сетке чанков.
 /// **Note** Например, второй чанк по оси Х, будет иметь координату X = 1, а не CHUNK_SIZE!
-#[derive(Default, Hash, Eq, PartialEq, Clone, Copy, Debug)]
+#[derive(Default, Hash, Eq, PartialEq, Clone, Copy, Debug, Deref, DerefMut)]
 pub struct ChunkPos {
     pos: IVec3,
 }
@@ -40,20 +41,6 @@ impl ChunkPos {
     /// Возвращает абсолютные координаты чанка в мире
     pub fn get_absolute_coord(&self) -> IVec3 {
         self.pos * CHUNK_SIZE as i32
-    }
-}
-
-impl Deref for ChunkPos {
-    type Target = IVec3;
-
-    fn deref(&self) -> &Self::Target {
-        &self.pos
-    }
-}
-
-impl DerefMut for ChunkPos {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.pos
     }
 }
 

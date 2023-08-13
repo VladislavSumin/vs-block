@@ -1,10 +1,10 @@
-use std::ops::Deref;
+use bevy_derive::Deref;
 use bevy_math::{IVec3, UVec3, Vec3};
 use crate::chunk::CHUNK_SIZE;
 
 /// Координаты блока в пределах чанка
 /// TODO добавить compile time проверку выхода за границы допустимых для чанка индексов
-#[derive(Default, Copy, Clone)]
+#[derive(Default, Copy, Clone, Deref)]
 pub struct ChunkBlockPos {
     pos: UVec3,
 }
@@ -31,14 +31,6 @@ impl TryFrom<IVec3> for ChunkBlockPos {
         } else {
             Err(())
         }
-    }
-}
-
-impl Deref for ChunkBlockPos {
-    type Target = UVec3;
-
-    fn deref(&self) -> &Self::Target {
-        &self.pos
     }
 }
 

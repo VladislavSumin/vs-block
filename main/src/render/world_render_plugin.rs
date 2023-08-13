@@ -3,7 +3,7 @@ use bevy::asset::Assets;
 use bevy::pbr::{PbrBundle, StandardMaterial};
 use bevy::prelude::*;
 use bevy::utils::{HashMap, HashSet};
-use chunk::ChunkPos;
+use chunk::{ChunkNeighborDir, ChunkPos};
 use crate::logic::world::{ChunkUpdateEvent, World};
 use crate::render::chunk_mesh_builder::build_chunk_mesh;
 
@@ -14,6 +14,7 @@ pub struct ChunkRenderPlugin;
 impl Plugin for ChunkRenderPlugin {
     fn build(&self, app: &mut App) {
         app
+            .init_resource::<WorldLoadChunksQueue>()
             .init_resource::<WorldUnloadChunksQueue>()
             .init_resource::<WorldRenderState>()
             .add_systems(Startup, load_world_material)
@@ -35,6 +36,12 @@ struct WorldUnloadChunksQueue {
     chunk_to_despawn: HashSet<ChunkPos>,
 }
 
+#[derive(Resource, Deref, DerefMut, Default)]
+struct WorldLoadChunksQueue {
+    /// Чанки которые необходимо отрендерить ИЛИ чанки рендер которых нужно обновить
+    chunk_to_spawn: HashSet<ChunkPos>,
+}
+
 #[derive(Resource)]
 struct WorldMaterial {
     material_handle: Handle<StandardMaterial>,
@@ -42,12 +49,9 @@ struct WorldMaterial {
 
 #[derive(Resource, Default)]
 struct WorldRenderState {
-    /// Чанки которые необходимо отрендерить (или перерендерить)
-    chunk_to_render: HashSet<ChunkPos>,
-
     /// Отрендеренные чанки.
     ///
-    /// Если по ключу присутствует значение, это означает, что чанк был отрендере, при этом само значение optional так
+    /// Если по ключу присутствует значение, это означает, что чанк был отрендерен, при этом само значение optional так
     /// как мы не создаем Entity если в результате оптимизации меша чанка он получился пустым (иначе это сильно
     /// ухудшает общую производительность)
     rendered_chunks: HashMap<ChunkPos, Option<Entity>>,
@@ -79,7 +83,7 @@ fn load_world_material(
 
 /// Читает события [ChunkUpdateEvent] и управляет очередью загрузки/выгрузки чанков
 fn read_chunk_events(
-    mut render_state: ResMut<WorldRenderState>,
+    mut world_load_chunks_queue: ResMut<WorldLoadChunksQueue>,
     mut world_unload_chunks_queue: ResMut<WorldUnloadChunksQueue>,
     mut chunk_event: EventReader<ChunkUpdateEvent>,
 ) {
@@ -87,11 +91,14 @@ fn read_chunk_events(
     for event in chunk_event.iter() {
         match event {
             ChunkUpdateEvent::Loaded(pos) => {
-                render_state.chunk_to_render.insert(*pos);
+                world_load_chunks_queue.insert(*pos);
                 world_unload_chunks_queue.remove(pos);
+
+                // Обновляем все чанки вокруг ново загрузившегося если они  уже загружены
+                ChunkNeighborDir
             }
             ChunkUpdateEvent::Unloaded(pos) => {
-                render_state.chunk_to_render.remove(pos);
+                world_load_chunks_queue.remove(pos);
                 world_unload_chunks_queue.insert(*pos);
             }
         }
@@ -100,6 +107,7 @@ fn read_chunk_events(
 
 /// Создает меши новых чанков и загружает их в память
 fn load_chunks(
+    mut world_load_chunks_queue: ResMut<WorldLoadChunksQueue>,
     mut render_state: ResMut<WorldRenderState>,
     mut commands: Commands,
     world: Res<World>,
@@ -108,7 +116,7 @@ fn load_chunks(
 ) {
 
     // Рендерим новые чанки и добавляем их rendered_chunks
-    let new_chunks: Vec<(ChunkPos, Option<Entity>)> = render_state.chunk_to_render.drain().map(|pos| {
+    let new_chunks: Vec<(ChunkPos, Option<Entity>)> = world_load_chunks_queue.drain().map(|pos| {
         let chunk = world.get_chunk(&pos).unwrap();
         let mesh = build_chunk_mesh(chunk, pos);
 

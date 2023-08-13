@@ -1,10 +1,10 @@
 use std::collections::HashMap;
-use std::ops::{Deref, DerefMut};
+use bevy_derive::{Deref, DerefMut};
 use crate::{Chunk, ChunkPos};
 use crate::absolute_block_pos::AbsoluteBlockPos;
 
 /// Карта с чанками
-#[derive(Default)]
+#[derive(Default, Deref, DerefMut)]
 pub struct ChunkMap<BLOCK, METADATA> {
     chunks: HashMap<ChunkPos, Chunk<BLOCK, METADATA>>,
 }
@@ -21,20 +21,5 @@ impl<BLOCK, METADATA> ChunkMap<BLOCK, METADATA> {
             let local_block_pos = chunk_pos.try_global_pos_into_chunk_pos(index).unwrap();
             &chunk[&local_block_pos]
         } else { &None }
-    }
-}
-
-impl<BLOCK, METADATA> Deref for ChunkMap<BLOCK, METADATA>
-{
-    type Target = HashMap<ChunkPos, Chunk<BLOCK, METADATA>>;
-
-    fn deref(&self) -> &Self::Target {
-        &self.chunks
-    }
-}
-
-impl<BLOCK, METADATA> DerefMut for ChunkMap<BLOCK, METADATA> {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.chunks
     }
 }
