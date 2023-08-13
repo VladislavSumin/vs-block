@@ -134,7 +134,11 @@ fn load_chunks(
             }
         }
 
-        let chunk = world.get_chunk(&pos).unwrap();
+        let chunk = world.get_chunk(&pos);
+        let chunk = match chunk {
+            None => { return true; }
+            Some(chunk) => { chunk }
+        };
         let mesh = build_chunk_mesh(&world.chunk_map, chunk, *pos);
 
         // Не спавним пустые меши, это сильно бьет по производительности рендера
