@@ -1,7 +1,9 @@
 use std::ops::{Add, Deref};
 use bevy_math::IVec3;
+use strum_macros::EnumIter;
 use crate::ChunkPos;
 
+#[derive(EnumIter, Copy, Clone)]
 pub enum ChunkNeighborDir {
     PosX,
     NegX,

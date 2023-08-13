@@ -3,6 +3,7 @@ use bevy::asset::Assets;
 use bevy::pbr::{PbrBundle, StandardMaterial};
 use bevy::prelude::*;
 use bevy::utils::{HashMap, HashSet};
+use strum::IntoEnumIterator;
 use chunk::{ChunkNeighborDir, ChunkPos};
 use crate::logic::world::{ChunkUpdateEvent, World};
 use crate::render::chunk_mesh_builder::build_chunk_mesh;
@@ -83,6 +84,7 @@ fn load_world_material(
 
 /// Читает события [ChunkUpdateEvent] и управляет очередью загрузки/выгрузки чанков
 fn read_chunk_events(
+    render_state: ResMut<WorldRenderState>,
     mut world_load_chunks_queue: ResMut<WorldLoadChunksQueue>,
     mut world_unload_chunks_queue: ResMut<WorldUnloadChunksQueue>,
     mut chunk_event: EventReader<ChunkUpdateEvent>,
@@ -95,7 +97,11 @@ fn read_chunk_events(
                 world_unload_chunks_queue.remove(pos);
 
                 // Обновляем все чанки вокруг ново загрузившегося если они  уже загружены
-                ChunkNeighborDir
+                for dir in ChunkNeighborDir::iter() {
+                    if let Some(_) = render_state.rendered_chunks.get(&(*pos + dir)) {
+                        world_load_chunks_queue.insert(*pos + dir);
+                    }
+                }
             }
             ChunkUpdateEvent::Unloaded(pos) => {
                 world_load_chunks_queue.remove(pos);
@@ -114,31 +120,45 @@ fn load_chunks(
     mut assets: ResMut<Assets<Mesh>>,
     world_material: Res<WorldMaterial>,
 ) {
+    world_load_chunks_queue.retain(|pos| {
+        let entity = render_state.rendered_chunks.get(pos).unwrap_or(&None);
 
-    // Рендерим новые чанки и добавляем их rendered_chunks
-    let new_chunks: Vec<(ChunkPos, Option<Entity>)> = world_load_chunks_queue.drain().map(|pos| {
+        if let Some(entity) = entity {
+            let ec = commands.get_entity(*entity);
+            match ec {
+                None => { return true; }
+                Some(mut ec) => {
+                    render_state.rendered_chunks.remove(pos).unwrap();
+                    ec.despawn()
+                }
+            }
+        }
+
         let chunk = world.get_chunk(&pos).unwrap();
-        let mesh = build_chunk_mesh(chunk, pos);
+        let mesh = build_chunk_mesh(chunk, *pos);
 
         // Не спавним пустые меши, это сильно бьет по производительности рендера
         if mesh.indices().map(|indexes| { indexes.is_empty() }).unwrap_or(true) {
-            return (pos, None);
+            render_state.rendered_chunks.insert(*pos,None);
+            return false;
         }
 
         let mesh = assets.add(mesh);
 
+        let bundle = PbrBundle {
+            mesh,
+            material: world_material.material_handle.clone(),
+            transform: Transform::from_translation(pos.get_absolute_coord().as_vec3()),
+            ..default()
+        };
+
         let entity = commands.spawn(
-            PbrBundle {
-                mesh,
-                material: world_material.material_handle.clone(),
-                transform: Transform::from_translation(pos.get_absolute_coord().as_vec3()),
-                ..default()
-            }
+            bundle
         ).id();
 
-        (pos, Some(entity))
-    }).collect();
-    render_state.rendered_chunks.extend(new_chunks);
+        render_state.rendered_chunks.insert(*pos,Some(entity));
+        false
+    });
 }
 
 /// Выгружает ненужные меши чанков из памяти

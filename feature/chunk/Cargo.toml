@@ -8,3 +8,5 @@ edition = "2021"
 [dependencies]
 bevy_math = { }
 bevy_derive = { }
+strum = { }
+strum_macros = { }

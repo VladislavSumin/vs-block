@@ -1161,6 +1161,8 @@ version = "0.1.0"
 dependencies = [
  "bevy_derive",
  "bevy_math",
+ "strum",
+ "strum_macros",
 ]
 
 [[package]]
