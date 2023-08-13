@@ -23,7 +23,7 @@ pub fn build_chunk_mesh(chunk_map: &ChunkMap, chunk: &Chunk, chunk_pos: ChunkPos
 }
 
 fn has_neighbor_block(chunk_map: &ChunkMap, chunk: &Chunk, chunk_pos: ChunkPos, pos: ChunkBlockPos, dir: AbsoluteBlockFaceDirection) -> bool {
-    if pos.z == 0 { return true; }
+    if chunk_pos.z == 0 && pos.z == 0 { return true; }
     // Вычисляем глобальные координаты блока соседствующего с данным с переданной стороны
     let dir_pos: IVec3 = dir.into();
     let global_pos: AbsoluteBlockPos = (chunk_pos.get_absolute_coord() + pos.as_ivec3() + dir_pos).into();

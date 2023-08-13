@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use bevy::utils::HashSet;
 use chunk::ChunkPos;
 use world_anchor::{WorldAnchor, WorldAnchorInChunkPos};
-use crate::logic::world::world::World;
+use crate::logic::world::world::{World, WORLD_HEIGHT_CHUNKS};
 
 pub struct WorldPlugin;
 
@@ -61,7 +61,7 @@ fn manage_chunk_loading_state(
 
         for x in anchor_chunk_coord.x - load_radius..anchor_chunk_coord.x + load_radius {
             for y in anchor_chunk_coord.y - load_radius..anchor_chunk_coord.y + load_radius {
-                for z in 0..(512 / 16) {
+                for z in 0..(WORLD_HEIGHT_CHUNKS as i32) {
                     let pos = ivec3(x, y, z).into();
                     // Удаляем чанк находящийся внутри радиуса из списка чанков на удаление
                     if !chunks_to_unload.remove(&pos) {

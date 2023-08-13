@@ -7,8 +7,8 @@ use chunk::{CHUNK_SIZE, ChunkPos};
 use crate::logic::block::{Block, BlockType};
 use crate::logic::chunk::{Chunk, ChunkMap};
 
-pub const WORLD_HEIGHT_CHUNKS: u32 = 16;
-pub const WORLD_HEIGHT: u32 = 16 * CHUNK_SIZE as u32;
+pub const WORLD_HEIGHT: usize = 256;
+pub const WORLD_HEIGHT_CHUNKS: usize = WORLD_HEIGHT / CHUNK_SIZE;
 
 type Noise = noise::Fbm<noise::SuperSimplex>;
 
