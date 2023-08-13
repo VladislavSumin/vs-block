@@ -135,11 +135,11 @@ fn load_chunks(
         }
 
         let chunk = world.get_chunk(&pos).unwrap();
-        let mesh = build_chunk_mesh(chunk, *pos);
+        let mesh = build_chunk_mesh(&world.chunk_map, chunk, *pos);
 
         // Не спавним пустые меши, это сильно бьет по производительности рендера
         if mesh.indices().map(|indexes| { indexes.is_empty() }).unwrap_or(true) {
-            render_state.rendered_chunks.insert(*pos,None);
+            render_state.rendered_chunks.insert(*pos, None);
             return false;
         }
 
@@ -156,7 +156,7 @@ fn load_chunks(
             bundle
         ).id();
 
-        render_state.rendered_chunks.insert(*pos,Some(entity));
+        render_state.rendered_chunks.insert(*pos, Some(entity));
         false
     });
 }

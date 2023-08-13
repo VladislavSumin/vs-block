@@ -24,7 +24,7 @@ impl Add<ChunkNeighborDir> for ChunkPos {
             ChunkNeighborDir::PosY => { IVec3::Y }
             ChunkNeighborDir::NegY => { IVec3::NEG_Y }
             ChunkNeighborDir::PosZ => { IVec3::Z }
-            ChunkNeighborDir::NegZ => { IVec3::NEG_Y }
+            ChunkNeighborDir::NegZ => { IVec3::NEG_Z }
         };
         (*(self.deref()) + vec).into()
     }
