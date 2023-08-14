@@ -9,7 +9,7 @@ use bevy::prelude::*;
 use world_anchor::WorldAnchorPlugin;
 use crate::camera::CameraPlugin;
 use crate::key_binding::KeyBindingsPlugin;
-use crate::render::ChunkRenderPlugin;
+use crate::render::{ChunkRenderPlugin, WorldMaterialPlugin};
 use crate::logic::world::WorldPlugin;
 use crate::render::debug::DebugInfoRenderPlugin;
 
@@ -27,6 +27,7 @@ fn main() {
         .add_plugins(KeyBindingsPlugin)
         .add_plugins(CameraPlugin)
         .add_plugins(WorldAnchorPlugin)
+        .add_plugins(WorldMaterialPlugin)
         .add_plugins(WorldPlugin)
         .add_plugins(ChunkRenderPlugin)
         .add_plugins(DebugInfoRenderPlugin)

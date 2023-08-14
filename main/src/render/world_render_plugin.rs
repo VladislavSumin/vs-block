@@ -1,12 +1,13 @@
 use bevy::app::{App, Plugin, Update};
 use bevy::asset::Assets;
-use bevy::pbr::{PbrBundle, StandardMaterial};
+use bevy::pbr::PbrBundle;
 use bevy::prelude::*;
 use bevy::utils::{HashMap, HashSet};
 use strum::IntoEnumIterator;
 use chunk::{ChunkNeighborDir, ChunkPos};
 use crate::logic::world::{ChunkUpdateEvent, World};
 use crate::render::chunk_mesh_builder::build_chunk_mesh;
+use crate::render::world_material_plugin::WorldMaterial;
 
 /// Отвечает за генерацию [Mesh] для загруженных [Chunk], а так же за обновление [Mesh] при
 /// обновлении [Chunk]
@@ -18,7 +19,6 @@ impl Plugin for ChunkRenderPlugin {
             .init_resource::<WorldLoadChunksQueue>()
             .init_resource::<WorldUnloadChunksQueue>()
             .init_resource::<WorldRenderState>()
-            .add_systems(Startup, load_world_material)
             .add_systems(Update, read_chunk_events)
             .add_systems(Update, load_chunks)
             .add_systems(Update, unload_chunks)
@@ -43,11 +43,6 @@ struct WorldLoadChunksQueue {
     chunk_to_spawn: HashSet<ChunkPos>,
 }
 
-#[derive(Resource)]
-struct WorldMaterial {
-    material_handle: Handle<StandardMaterial>,
-}
-
 #[derive(Resource, Default)]
 struct WorldRenderState {
     /// Отрендеренные чанки.
@@ -56,30 +51,6 @@ struct WorldRenderState {
     /// как мы не создаем Entity если в результате оптимизации меша чанка он получился пустым (иначе это сильно
     /// ухудшает общую производительность)
     rendered_chunks: HashMap<ChunkPos, Option<Entity>>,
-}
-
-fn load_world_material(
-    mut materials: ResMut<Assets<StandardMaterial>>,
-    asset_server: Res<AssetServer>,
-    mut commands: Commands,
-) {
-    let texture: Handle<Image> = asset_server.load("dirt.png");
-
-    let material = StandardMaterial {
-        base_color_texture: Some(texture),
-        unlit: false,
-        metallic: 0.,
-        reflectance: 0.,
-        ..default()
-    };
-
-    let material_handle = materials.add(material);
-    //
-    let world_material = WorldMaterial {
-        material_handle
-    };
-
-    commands.insert_resource(world_material);
 }
 
 /// Читает события [ChunkUpdateEvent] и управляет очередью загрузки/выгрузки чанков
@@ -96,7 +67,7 @@ fn read_chunk_events(
                 world_load_chunks_queue.insert(*pos);
                 world_unload_chunks_queue.remove(pos);
 
-                // Обновляем все чанки вокруг ново загрузившегося если они  уже загружены
+                // Обновляем все чанки вокруг ново загрузившегося если они уже загружены
                 for dir in ChunkNeighborDir::iter() {
                     if let Some(_) = render_state.rendered_chunks.get(&(*pos + dir)) {
                         world_load_chunks_queue.insert(*pos + dir);
@@ -151,7 +122,7 @@ fn load_chunks(
 
         let bundle = PbrBundle {
             mesh,
-            material: world_material.material_handle.clone(),
+            material: world_material.clone(),
             transform: Transform::from_translation(pos.get_absolute_coord().as_vec3()),
             ..default()
         };
