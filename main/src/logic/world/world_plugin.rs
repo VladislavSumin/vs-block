@@ -25,7 +25,7 @@ pub enum ChunkUpdateEvent {
     Unloaded(ChunkPos),
 }
 
-#[derive(Resource, Default)]
+#[derive(Resource, Default, Deref, DerefMut)]
 struct ChunkLoadingQueue {
     pub positions: HashSet<ChunkPos>,
 }
@@ -93,13 +93,12 @@ fn load_new_chunks_from_queue(
     mut chunk_event_writer: EventWriter<ChunkUpdateEvent>,
     mut chunk_loading_queue: ResMut<ChunkLoadingQueue>,
 ) {
-    let mut generated_chunks: HashSet<ChunkPos> = HashSet::new();
-    for pos in chunk_loading_queue.positions.iter().take(100) {
+    let mut num = 0;
+    chunk_loading_queue.retain(|pos| {
+        if num > 100 { return true; }
+        num += 1;
         world.add_chunk(*pos);
         chunk_event_writer.send(ChunkUpdateEvent::Loaded(*pos));
-        generated_chunks.insert(*pos);
-    }
-    for pos in generated_chunks {
-        chunk_loading_queue.positions.remove(&pos);
-    }
+        false
+    });
 }
