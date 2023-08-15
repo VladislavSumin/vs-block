@@ -1,5 +1,7 @@
-use bevy::math::{IVec3, ivec3};
+use std::ops::{Add, Deref};
+use bevy::math::IVec3;
 use strum_macros::EnumIter;
+use chunk::AbsoluteBlockPos;
 use crate::render::MeshPart;
 
 /// Направление стороны блока в абсолютных координатах
@@ -230,5 +232,15 @@ impl MeshPart for AbsoluteBlockFaceDirection {
 
     fn get_uvs(&self) -> &[[f32; 2]] {
         self.get_uvs()
+    }
+}
+
+/// Сумма [AbsoluteBlockPos] + [AbsoluteBlockFaceDirection] = [AbsoluteBlockPos]
+impl Add<AbsoluteBlockFaceDirection> for AbsoluteBlockPos {
+    type Output = AbsoluteBlockPos;
+
+    fn add(self, rhs: AbsoluteBlockFaceDirection) -> Self::Output {
+        let face_vec: IVec3 = rhs.into();
+        (*self.deref() + face_vec).into()
     }
 }
