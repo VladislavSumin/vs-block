@@ -1,6 +1,6 @@
 use bevy::math::ivec3;
 use bevy::prelude::*;
-use bevy::utils::HashSet;
+use bevy::utils::HashMap;
 use chunk::ChunkPos;
 use world_anchor::{WorldAnchor, WorldAnchorInChunkPos};
 use crate::logic::world::world::{World, WORLD_HEIGHT_CHUNKS};
@@ -26,9 +26,14 @@ pub enum ChunkUpdateEvent {
 }
 
 #[derive(Resource, Default, Deref, DerefMut)]
-struct ChunkLoadingQueue {
-    pub positions: HashSet<ChunkPos>,
+struct ChunkLoadingQueue(Vec<ChunkLoadInfo>);
+
+#[derive(Copy, Clone)]
+struct ChunkLoadInfo {
+    pos: ChunkPos,
+    priority: i32,
 }
+
 
 /// Загружает управлаяет очередью загрузки чанков, а так же выгружает не нужные чанки из памяти
 fn manage_chunk_loading_state(
@@ -49,7 +54,7 @@ fn manage_chunk_loading_state(
     let mut chunks_to_unload = world.get_chunk_keys();
 
     // Список чанков которые нужно загрузить
-    let mut chunks_to_load = HashSet::<ChunkPos>::new();
+    let mut chunks_to_load = HashMap::<ChunkPos, ChunkLoadInfo>::new();
 
     // Итерируемся по всем WorldAnchor
     for (pos, world_anchor) in world_anchors_pos.iter() {
@@ -69,7 +74,12 @@ fn manage_chunk_loading_state(
                     if !chunks_to_unload.remove(&pos) {
                         // Если такого чанка вообще не было среди загруженных, добавляем его в очередь на загрузку
                         if !world.is_chunk_loaded(&pos) {
-                            chunks_to_load.insert(pos);
+                            let chunk_load_info = ChunkLoadInfo {
+                                pos,
+                                priority: anchor_chunk_coord.distance_squared(*pos),
+                            };
+                            // TODO если тут уже есть значение нужно выставить правильный приоритет
+                            chunks_to_load.insert(pos, chunk_load_info);
                         }
                     }
                 }
@@ -83,8 +93,9 @@ fn manage_chunk_loading_state(
         chunk_event_writer.send(ChunkUpdateEvent::Unloaded(chunk_coord))
     }
 
-    // Обновляем очередь на загрузку чанков
-    chunk_loading_queue.positions = chunks_to_load;
+    chunk_loading_queue.clear();
+    chunk_loading_queue.extend(chunks_to_load.iter().map(|pos| pos.1));
+    chunk_loading_queue.sort_by(|a, b| { a.priority.cmp(&b.priority) })
 }
 
 /// Загружает чинки из очереди [ChunkLoadingQueue]
@@ -94,11 +105,12 @@ fn load_new_chunks_from_queue(
     mut chunk_loading_queue: ResMut<ChunkLoadingQueue>,
 ) {
     let mut num = 0;
-    chunk_loading_queue.retain(|pos| {
+    chunk_loading_queue.retain(|chunk_loading_info| {
         if num > 100 { return true; }
         num += 1;
-        world.add_chunk(*pos);
-        chunk_event_writer.send(ChunkUpdateEvent::Loaded(*pos));
+        let pos = chunk_loading_info.pos;
+        world.add_chunk(pos);
+        chunk_event_writer.send(ChunkUpdateEvent::Loaded(pos));
         false
     });
 }
