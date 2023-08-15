@@ -59,8 +59,10 @@ fn manage_chunk_loading_state(
         let mut anchor_chunk_coord = pos.pos;
         anchor_chunk_coord.z = 0;
 
-        for x in anchor_chunk_coord.x - load_radius..anchor_chunk_coord.x + load_radius {
-            for y in anchor_chunk_coord.y - load_radius..anchor_chunk_coord.y + load_radius {
+        if load_radius == 0 { continue; }
+
+        for x in anchor_chunk_coord.x - load_radius + 1..anchor_chunk_coord.x + load_radius {
+            for y in anchor_chunk_coord.y - load_radius + 1..anchor_chunk_coord.y + load_radius {
                 for z in 0..(WORLD_HEIGHT_CHUNKS as i32) {
                     let pos = ivec3(x, y, z).into();
                     // Удаляем чанк находящийся внутри радиуса из списка чанков на удаление

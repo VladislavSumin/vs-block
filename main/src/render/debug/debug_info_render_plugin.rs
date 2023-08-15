@@ -59,6 +59,7 @@ fn update_debug_info(
     let player_transition = player_query.single();
     let player_coord = player_transition.translation;
 
+    // TODO не запрашивать количество памяти так часто
     let mem = memory_stats().unwrap().physical_mem;
     let mem = ByteSize::b(mem as u64);
 
