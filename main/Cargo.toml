@@ -12,3 +12,5 @@ rand = { }
 noise = { }
 strum_macros = { }
 strum = { }
+memory-stats = { }
+bytesize = { }

@@ -2,6 +2,8 @@ use bevy::app::{App, Startup};
 use bevy::diagnostic::{DiagnosticsStore, EntityCountDiagnosticsPlugin, FrameTimeDiagnosticsPlugin};
 use bevy::prelude::*;
 use std::fmt::Write;
+use bytesize::ByteSize;
+use memory_stats::memory_stats;
 use crate::camera::PlayerCamera;
 
 /// Отображает дополнительную дебажную информацию
@@ -57,6 +59,9 @@ fn update_debug_info(
     let player_transition = player_query.single();
     let player_coord = player_transition.translation;
 
+    let mem = memory_stats().unwrap().physical_mem;
+    let mem = ByteSize::b(mem as u64);
+
     let entity_count = diagnostics
         .get(EntityCountDiagnosticsPlugin::ENTITY_COUNT)
         .and_then(|entity_count| entity_count.average())
@@ -68,9 +73,10 @@ fn update_debug_info(
     text.clear();
     write!(
         text,
-        "  FPS:{:3} x:{:.01} y:{:.01} z:{:.01} e={}, m={}",
+        "  FPS:{:3} x:{:.01} y:{:.01} z:{:.01}, mem={}, e={}, m={}",
         fps,
         player_coord.x, player_coord.y, player_coord.z,
+        mem,
         entity_count,
         mesh_count,
     )
