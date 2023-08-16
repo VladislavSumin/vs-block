@@ -3309,6 +3309,7 @@ dependencies = [
  "bevy",
  "bytesize",
  "chunk",
+ "futures-lite",
  "memory-stats",
  "noise",
  "rand 0.8.5",

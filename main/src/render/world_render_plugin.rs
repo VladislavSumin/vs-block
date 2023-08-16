@@ -110,7 +110,9 @@ fn load_chunks(
             None => { return true; }
             Some(chunk) => { chunk }
         };
-        let mesh = build_chunk_mesh(&world.chunk_map, chunk, *pos);
+        let chunk = chunk.read().unwrap();
+        let mesh = build_chunk_mesh(&world.chunk_map, &chunk, *pos);
+        drop(chunk);
 
         // Не спавним пустые меши, это сильно бьет по производительности рендера
         if mesh.indices().map(|indexes| { indexes.is_empty() }).unwrap_or(true) {

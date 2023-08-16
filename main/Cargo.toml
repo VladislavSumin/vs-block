@@ -14,3 +14,4 @@ strum_macros = { }
 strum = { }
 memory-stats = { }
 bytesize = { }
+futures-lite = { }

@@ -1,3 +1,4 @@
+use std::sync::RwLock;
 use bevy::prelude::Mesh;
 use strum::IntoEnumIterator;
 use chunk::{AbsoluteBlockPos, ChunkBlockPos, ChunkPos};
@@ -5,7 +6,7 @@ use crate::logic::chunk::{Chunk, ChunkMap};
 use crate::render::{AbsoluteBlockFaceDirection, MeshBuilder};
 
 /// Строит [Mesh] для чанка
-pub fn build_chunk_mesh(chunk_map: &ChunkMap, chunk: &Chunk, chunk_pos: ChunkPos) -> Mesh {
+pub fn build_chunk_mesh(chunk_map: &RwLock<ChunkMap>, chunk: &Chunk, chunk_pos: ChunkPos) -> Mesh {
     let mut builder = MeshBuilder::new();
 
     // Итерируемся по всем блокам
@@ -29,7 +30,7 @@ pub fn build_chunk_mesh(chunk_map: &ChunkMap, chunk: &Chunk, chunk_pos: ChunkPos
 
 /// Возвращает нужно ли рендерить данную грань блока
 fn is_need_to_render_face(
-    chunk_map: &ChunkMap,
+    chunk_map: &RwLock<ChunkMap>,
     chunk: &Chunk,
     chunk_pos: ChunkPos,
     block_pos: ChunkBlockPos,
@@ -44,6 +45,7 @@ fn is_need_to_render_face(
     } else {
         // Соседний блок находится в соседнем чанке
         let neighbor_chunk_pos = ChunkPos::from_global_coord(*global_pos);
+        let chunk_map = chunk_map.read().unwrap();
         let neighbor_chunk = chunk_map.get(&neighbor_chunk_pos);
         match neighbor_chunk {
             None => {
@@ -52,7 +54,7 @@ fn is_need_to_render_face(
             }
             Some(chunk) => {
                 let block_pos = neighbor_chunk_pos.try_global_pos_into_chunk_pos(global_pos).unwrap();
-                chunk[&block_pos].is_some()
+                chunk.read().unwrap()[&block_pos].is_some()
             }
         }
     }
