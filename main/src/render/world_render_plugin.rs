@@ -83,7 +83,9 @@ fn read_chunk_events(
 
                 // Обновляем все чанки вокруг ново загрузившегося если они уже загружены
                 for dir in ChunkNeighborDir::iter() {
-                    if let Some(_) = render_state.rendered_chunks.get(&(*pos + dir)) {
+                    if render_state.rendered_chunks.contains_key(&(*pos + dir))
+                        || world_load_chunks_tasks.contains_key(&(*pos + dir))
+                    {
                         world_load_chunks_queue.insert(*pos + dir);
                         if let Some(task) = world_load_chunks_tasks.remove(pos) {
                             let _ = task.cancel();
