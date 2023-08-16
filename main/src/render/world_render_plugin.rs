@@ -1,8 +1,12 @@
+use std::sync::Arc;
 use bevy::app::{App, Plugin, Update};
 use bevy::asset::Assets;
 use bevy::pbr::PbrBundle;
 use bevy::prelude::*;
+use bevy::tasks::{AsyncComputeTaskPool, Task};
 use bevy::utils::{HashMap, HashSet};
+use futures_lite::future::poll_once;
+use futures_lite::future::block_on;
 use strum::IntoEnumIterator;
 use chunk::{ChunkNeighborDir, ChunkPos};
 use crate::logic::world::{ChunkUpdateEvent, World};
@@ -19,7 +23,9 @@ impl Plugin for ChunkRenderPlugin {
             .init_resource::<WorldLoadChunksQueue>()
             .init_resource::<WorldUnloadChunksQueue>()
             .init_resource::<WorldRenderState>()
+            .init_resource::<WorldLoadChunksTasks>()
             .add_systems(Update, read_chunk_events)
+            .add_systems(Update, start_load_chunks)
             .add_systems(Update, load_chunks)
             .add_systems(Update, unload_chunks)
         ;
@@ -43,6 +49,9 @@ struct WorldLoadChunksQueue {
     chunk_to_spawn: HashSet<ChunkPos>,
 }
 
+#[derive(Resource, Deref, DerefMut, Default)]
+struct WorldLoadChunksTasks(HashMap<ChunkPos, Task<Mesh>>);
+
 #[derive(Resource, Default)]
 struct WorldRenderState {
     /// Отрендеренные чанки.
@@ -57,6 +66,7 @@ struct WorldRenderState {
 fn read_chunk_events(
     render_state: ResMut<WorldRenderState>,
     mut world_load_chunks_queue: ResMut<WorldLoadChunksQueue>,
+    mut world_load_chunks_tasks: ResMut<WorldLoadChunksTasks>,
     mut world_unload_chunks_queue: ResMut<WorldUnloadChunksQueue>,
     mut chunk_event: EventReader<ChunkUpdateEvent>,
 ) {
@@ -65,33 +75,69 @@ fn read_chunk_events(
         match event {
             ChunkUpdateEvent::Loaded(pos) => {
                 world_load_chunks_queue.insert(*pos);
+                if let Some(task) = world_load_chunks_tasks.remove(pos) {
+                    let _ = task.cancel();
+                }
+
                 world_unload_chunks_queue.remove(pos);
 
                 // Обновляем все чанки вокруг ново загрузившегося если они уже загружены
                 for dir in ChunkNeighborDir::iter() {
                     if let Some(_) = render_state.rendered_chunks.get(&(*pos + dir)) {
                         world_load_chunks_queue.insert(*pos + dir);
+                        if let Some(task) = world_load_chunks_tasks.remove(pos) {
+                            let _ = task.cancel();
+                        }
                     }
                 }
             }
             ChunkUpdateEvent::Unloaded(pos) => {
                 world_load_chunks_queue.remove(pos);
+                if let Some(task) = world_load_chunks_tasks.remove(pos) {
+                    let _ = task.cancel();
+                }
                 world_unload_chunks_queue.insert(*pos);
             }
         }
     }
 }
 
+fn start_load_chunks(
+    mut world_load_chunks_queue: ResMut<WorldLoadChunksQueue>,
+    mut world_load_chunks_tasks: ResMut<WorldLoadChunksTasks>,
+    world: Res<World>,
+) {
+    let pool = AsyncComputeTaskPool::get();
+    world_load_chunks_queue.retain(|pos| {
+        let chunk = world.get_chunk(&pos);
+        let chunk = match chunk {
+            None => { return true; }
+            Some(chunk) => { chunk }
+        };
+        let chunk_map = Arc::clone(&world.chunk_map);
+        let pos = *pos;
+        let task = pool.spawn(async move {
+            let chunk = chunk.read().unwrap();
+            build_chunk_mesh(&chunk_map, &chunk, pos)
+        });
+        world_load_chunks_tasks.insert(pos, task);
+        false
+    });
+}
+
+
 /// Создает меши новых чанков и загружает их в память
 fn load_chunks(
-    mut world_load_chunks_queue: ResMut<WorldLoadChunksQueue>,
+    mut world_load_chunks_tasks: ResMut<WorldLoadChunksTasks>,
     mut render_state: ResMut<WorldRenderState>,
     mut commands: Commands,
     world: Res<World>,
     mut assets: ResMut<Assets<Mesh>>,
     world_material: Res<WorldMaterial>,
 ) {
-    world_load_chunks_queue.retain(|pos| {
+    world_load_chunks_tasks.retain(|pos, task| {
+        if !task.is_finished() { return true; }
+
         let entity = render_state.rendered_chunks.get(pos).unwrap_or(&None);
 
         if let Some(entity) = entity {
@@ -105,14 +151,16 @@ fn load_chunks(
             }
         }
 
-        let chunk = world.get_chunk(&pos);
-        let chunk = match chunk {
-            None => { return true; }
-            Some(chunk) => { chunk }
-        };
-        let chunk = chunk.read().unwrap();
-        let mesh = build_chunk_mesh(&world.chunk_map, &chunk, *pos);
-        drop(chunk);
+        let mesh: Mesh = block_on(poll_once(task)).unwrap();
+
+        // let chunk = world.get_chunk(&pos);
+        // let chunk = match chunk {
+        //     None => { return true; }
+        //     Some(chunk) => { chunk }
+        // };
+        // let chunk = chunk.read().unwrap();
+        // let mesh = build_chunk_mesh(&world.chunk_map, &chunk, *pos);
+        // drop(chunk);
 
         // Не спавним пустые меши, это сильно бьет по производительности рендера
         if mesh.indices().map(|indexes| { indexes.is_empty() }).unwrap_or(true) {
