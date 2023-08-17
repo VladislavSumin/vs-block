@@ -22,49 +22,43 @@ impl Plugin for ChunkRenderPlugin {
         app
             .init_resource::<WorldLoadChunksQueue>()
             .init_resource::<WorldUnloadChunksQueue>()
-            .init_resource::<WorldRenderState>()
+            .init_resource::<WorldRenderedChunks>()
             .init_resource::<WorldLoadChunksTasks>()
             .add_systems(Update, read_chunk_events)
             .add_systems(Update, start_load_chunks)
-            .add_systems(Update, load_chunks)
+            .add_systems(Update, collect_loaded_chunks)
             .add_systems(Update, unload_chunks)
         ;
     }
 }
 
+/// Чанки которые необходимо выгрузить из памяти
+///
+/// Мы не можем обойтись без этой коллекции из-за асинхронной природы работы команд. Может произойти ситуация когда
+/// мы сгенерировали меш для нового чанка и отдали bevy команду на спавн этого чанка в мир, но эта команда может не
+/// успеть выполнится до получения команды на удаление этого чанка, поэтому необходимо сначала проверить была ли
+/// entity в rendered_chunks на самом деле была сгенерена или еще нет
 #[derive(Resource, Deref, DerefMut, Default)]
-struct WorldUnloadChunksQueue {
-    /// Чанки которые необходимо выгрузить из памяти
-    ///
-    /// Мы не можем обойтись без этой коллекции из-за асинхронной природы работы команд. Может произойти ситуация когда
-    /// мы сгенерировали меш для нового чанка и отдали bevy команду на спавн этого чанка в мир, но эта команда может не
-    /// успеть выполнится до получения команды на удаление этого чанка, поэтому необходимо сначала проверить была ли
-    /// entity в rendered_chunks на самом деле была сгенерена или еще нет
-    chunk_to_despawn: HashSet<ChunkPos>,
-}
+struct WorldUnloadChunksQueue(HashSet<ChunkPos>);
 
+/// Чанки которые необходимо отрендерить ИЛИ чанки рендер которых нужно обновить
 #[derive(Resource, Deref, DerefMut, Default)]
-struct WorldLoadChunksQueue {
-    /// Чанки которые необходимо отрендерить ИЛИ чанки рендер которых нужно обновить
-    chunk_to_spawn: HashSet<ChunkPos>,
-}
+struct WorldLoadChunksQueue(HashSet<ChunkPos>);
 
 #[derive(Resource, Deref, DerefMut, Default)]
 struct WorldLoadChunksTasks(HashMap<ChunkPos, Task<Mesh>>);
 
-#[derive(Resource, Default)]
-struct WorldRenderState {
-    /// Отрендеренные чанки.
-    ///
-    /// Если по ключу присутствует значение, это означает, что чанк был отрендерен, при этом само значение optional так
-    /// как мы не создаем Entity если в результате оптимизации меша чанка он получился пустым (иначе это сильно
-    /// ухудшает общую производительность)
-    rendered_chunks: HashMap<ChunkPos, Option<Entity>>,
-}
+/// Отрендеренные чанки.
+///
+/// Если по ключу присутствует значение, это означает, что чанк был отрендерен, при этом само значение optional так
+/// как мы не создаем Entity если в результате оптимизации меша чанка он получился пустым (иначе это сильно
+/// ухудшает общую производительность)
+#[derive(Resource, Default, Deref, DerefMut)]
+struct WorldRenderedChunks(HashMap<ChunkPos, Option<Entity>>);
 
 /// Читает события [ChunkUpdateEvent] и управляет очередью загрузки/выгрузки чанков
 fn read_chunk_events(
-    render_state: ResMut<WorldRenderState>,
+    rendered_chunks: ResMut<WorldRenderedChunks>,
     mut world_load_chunks_queue: ResMut<WorldLoadChunksQueue>,
     mut world_load_chunks_tasks: ResMut<WorldLoadChunksTasks>,
     mut world_unload_chunks_queue: ResMut<WorldUnloadChunksQueue>,
@@ -83,7 +77,7 @@ fn read_chunk_events(
 
                 // Обновляем все чанки вокруг ново загрузившегося если они уже загружены
                 for dir in ChunkNeighborDir::iter() {
-                    if render_state.rendered_chunks.contains_key(&(*pos + dir))
+                    if rendered_chunks.contains_key(&(*pos + dir))
                         || world_load_chunks_tasks.contains_key(&(*pos + dir))
                     {
                         world_load_chunks_queue.insert(*pos + dir);
@@ -129,25 +123,24 @@ fn start_load_chunks(
 
 
 /// Создает меши новых чанков и загружает их в память
-fn load_chunks(
+fn collect_loaded_chunks(
     mut world_load_chunks_tasks: ResMut<WorldLoadChunksTasks>,
-    mut render_state: ResMut<WorldRenderState>,
+    mut rendered_chunks: ResMut<WorldRenderedChunks>,
     mut commands: Commands,
-    world: Res<World>,
     mut assets: ResMut<Assets<Mesh>>,
     world_material: Res<WorldMaterial>,
 ) {
     world_load_chunks_tasks.retain(|pos, task| {
         if !task.is_finished() { return true; }
 
-        let entity = render_state.rendered_chunks.get(pos).unwrap_or(&None);
+        let entity = rendered_chunks.get(pos).unwrap_or(&None);
 
         if let Some(entity) = entity {
             let ec = commands.get_entity(*entity);
             match ec {
                 None => { return true; }
                 Some(mut ec) => {
-                    render_state.rendered_chunks.remove(pos).unwrap();
+                    rendered_chunks.remove(pos).unwrap();
                     ec.despawn()
                 }
             }
@@ -155,18 +148,9 @@ fn load_chunks(
 
         let mesh: Mesh = block_on(poll_once(task)).unwrap();
 
-        // let chunk = world.get_chunk(&pos);
-        // let chunk = match chunk {
-        //     None => { return true; }
-        //     Some(chunk) => { chunk }
-        // };
-        // let chunk = chunk.read().unwrap();
-        // let mesh = build_chunk_mesh(&world.chunk_map, &chunk, *pos);
-        // drop(chunk);
-
         // Не спавним пустые меши, это сильно бьет по производительности рендера
         if mesh.indices().map(|indexes| { indexes.is_empty() }).unwrap_or(true) {
-            render_state.rendered_chunks.insert(*pos, None);
+            rendered_chunks.insert(*pos, None);
             return false;
         }
 
@@ -179,11 +163,9 @@ fn load_chunks(
             ..default()
         };
 
-        let entity = commands.spawn(
-            bundle
-        ).id();
+        let entity = commands.spawn(bundle).id();
 
-        render_state.rendered_chunks.insert(*pos, Some(entity));
+        rendered_chunks.insert(*pos, Some(entity));
         false
     });
 }
@@ -191,11 +173,11 @@ fn load_chunks(
 /// Выгружает ненужные меши чанков из памяти
 fn unload_chunks(
     mut world_unload_chunks_queue: ResMut<WorldUnloadChunksQueue>,
-    mut render_state: ResMut<WorldRenderState>,
+    mut rendered_chunks: ResMut<WorldRenderedChunks>,
     mut commands: Commands,
 ) {
     world_unload_chunks_queue.retain(|pos| {
-        let rendered_chunk = render_state.rendered_chunks.get(pos);
+        let rendered_chunk = rendered_chunks.get(pos);
         match rendered_chunk {
             None => {
                 // Этот кейс означает что чанк был добавлен в очередь на загрузку, а после был удален еще до того как
@@ -207,7 +189,7 @@ fn unload_chunks(
                 match entity_option {
                     None => {
                         // Чанк не имеет меша, можно смело удалять
-                        render_state.rendered_chunks.remove(pos).unwrap();
+                        rendered_chunks.remove(pos).unwrap();
                         false
                     }
                     Some(entity) => {
@@ -220,7 +202,7 @@ fn unload_chunks(
                             Some(mut entity_commands) => {
                                 // Ентити загрузилась, удаляем
                                 entity_commands.despawn();
-                                render_state.rendered_chunks.remove(pos).unwrap();
+                                rendered_chunks.remove(pos).unwrap();
                                 false
                             }
                         }

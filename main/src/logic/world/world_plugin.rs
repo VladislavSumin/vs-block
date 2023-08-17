@@ -115,7 +115,7 @@ fn load_new_chunks_from_queue(
     mut chunk_loading_tasks: ResMut<ChunkLoadingTasks>,
 ) {
     let pool = AsyncComputeTaskPool::get();
-    let size = min(64 - chunk_loading_tasks.len(), chunk_loading_queue.len());
+    let size = min(1024 - chunk_loading_tasks.len(), chunk_loading_queue.len());
     let new_tasks = chunk_loading_queue.drain(0..size)
         .map(|chunk_loading_info| {
             let noise = world.noise.clone();
