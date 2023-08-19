@@ -19,7 +19,7 @@ pub struct World {
     pub noise: Noise,
 
     /// Список загруженных чанков
-    pub chunk_map: Arc<RwLock<ChunkMap>>,
+    pub chunk_map: ChunkMap,
 }
 
 impl Default for World {
@@ -29,7 +29,7 @@ impl Default for World {
         noise.persistence = 0.25;
         World {
             noise,
-            chunk_map: Arc::new(RwLock::new(ChunkMap::default())),
+            chunk_map: ChunkMap::default(),
         }
     }
 }

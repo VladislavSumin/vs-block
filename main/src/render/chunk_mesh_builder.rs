@@ -6,7 +6,7 @@ use crate::logic::chunk::{Chunk, ChunkMap};
 use crate::render::{AbsoluteBlockFaceDirection, MeshBuilder};
 
 /// Строит [Mesh] для чанка
-pub fn build_chunk_mesh(chunk_map: &RwLock<ChunkMap>, chunk: &Chunk, chunk_pos: ChunkPos) -> Mesh {
+pub fn build_chunk_mesh(chunk_map: &ChunkMap, chunk: &Chunk, chunk_pos: ChunkPos) -> Mesh {
     let mut builder = MeshBuilder::new();
 
     // Итерируемся по всем блокам
@@ -30,7 +30,7 @@ pub fn build_chunk_mesh(chunk_map: &RwLock<ChunkMap>, chunk: &Chunk, chunk_pos: 
 
 /// Возвращает нужно ли рендерить данную грань блока
 fn is_need_to_render_face(
-    chunk_map: &RwLock<ChunkMap>,
+    chunk_map: &ChunkMap,
     chunk: &Chunk,
     chunk_pos: ChunkPos,
     block_pos: ChunkBlockPos,

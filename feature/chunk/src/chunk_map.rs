@@ -4,7 +4,9 @@ use bevy_derive::{Deref, DerefMut};
 use crate::{Chunk, ChunkPos};
 
 /// Карта с чанками
+pub type ChunkMap<BLOCK, METADATA> = Arc<RwLock<ChunkMapInternal<BLOCK, METADATA>>>;
+
 #[derive(Default, Deref, DerefMut)]
-pub struct ChunkMap<BLOCK, METADATA> {
+pub struct ChunkMapInternal<BLOCK, METADATA> {
     chunks: HashMap<ChunkPos, Arc<RwLock<Chunk<BLOCK, METADATA>>>>,
 }
