@@ -1,7 +1,6 @@
 [workspace]
 members = [
     "feature/chunk",
-    "feature/world",
     "feature/world-anchor",
     "main",
 ]

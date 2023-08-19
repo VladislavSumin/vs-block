@@ -3793,15 +3793,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "world"
-version = "0.1.0"
-dependencies = [
- "bevy",
- "chunk",
- "world-anchor",
-]
-
-[[package]]
 name = "world-anchor"
 version = "0.1.0"
 dependencies = [
